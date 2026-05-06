@@ -26,62 +26,72 @@ export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
   return (
     <motion.div 
       layout
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className="group relative glass rounded-2xl overflow-hidden masonry-item border-white/5 hover:border-white/20 transition-all duration-500"
+      className="group bg-white rounded-3xl overflow-hidden border border-slate-200 hover:border-brand-primary/30 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 flex flex-col h-full"
     >
-      <div class="relative aspect-[4/5] overflow-hidden">
-        <img 
-          src={prompt.image_url} 
-          alt={prompt.category}
-          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-          loading="lazy"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-6">
-          <div className="flex gap-2 mb-3">
-            {prompt.tags?.slice(0, 3).map(tag => (
-              <span key={tag} className="text-[10px] uppercase tracking-wider font-bold bg-white/10 backdrop-blur-md px-2 py-1 rounded-md text-white/80">
-                {tag}
-              </span>
-            ))}
+      {/* Preview Area */}
+      <div className="p-4">
+        <div className="relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
+          <img 
+            src={prompt.image_url} 
+            alt={prompt.category}
+            className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+            loading="lazy"
+          />
+          <div className="absolute top-3 left-3">
+             <span className="bg-slate-900/90 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg shadow-xl">
+               {prompt.category}
+             </span>
           </div>
-          <p className="text-sm text-white/90 line-clamp-3 mb-4 leading-relaxed font-medium">
-            {prompt.prompt_text}
-          </p>
-        </div>
-        
-        <div className="absolute top-4 right-4 flex flex-col gap-2 transition-all duration-500">
-          <button 
-            onClick={copyToClipboard}
-            className="w-10 h-10 rounded-xl bg-black/40 backdrop-blur-xl border border-white/20 flex items-center justify-center text-white hover:bg-brand-primary transition-all active:scale-90 shadow-lg"
-            title="Copy Prompt"
-          >
-            {copied ? <Check size={18} className="text-green-400" /> : <Copy size={18} />}
-          </button>
         </div>
       </div>
       
-      <div className="p-4 flex items-center justify-between">
-        <span className="text-xs font-semibold text-brand-primary uppercase tracking-widest">{prompt.category}</span>
-        <div className="flex -space-x-2">
-            <div className="w-6 h-6 rounded-full border-2 border-black bg-brand-primary"></div>
-            <div className="w-6 h-6 rounded-full border-2 border-black bg-brand-secondary"></div>
+      {/* Content Area */}
+      <div className="px-5 pb-5 flex-1 flex flex-col">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="h-px w-5 bg-slate-200"></div>
+          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Prompter</span>
+        </div>
+        
+        <p className="text-xs text-slate-600 leading-relaxed line-clamp-3 mb-6 font-medium">
+          {prompt.prompt_text}
+        </p>
+
+        <div className="mt-auto pt-5 border-t border-slate-50 flex items-center justify-between">
+           <div className="flex items-center gap-2.5">
+             <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold">
+               P
+             </div>
+             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Library AI</span>
+           </div>
+           <span className="text-[10px] font-bold text-slate-300">
+             {new Date(prompt.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+           </span>
         </div>
       </div>
 
-      <AnimatePresence>
-        {copied && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="absolute bottom-20 left-1/2 -translate-x-1/2 bg-brand-primary text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full shadow-lg shadow-brand-primary/40 pointer-events-none"
-          >
-            Copied prompt!
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Action Bar */}
+      <div className="px-4 pb-4 mt-auto">
+        <button 
+          onClick={copyToClipboard}
+          className={`w-full h-11 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] border shadow-sm ${
+            copied 
+              ? 'bg-green-50 border-green-200 text-green-600' 
+              : 'bg-slate-900 text-white hover:bg-slate-800'
+          }`}
+        >
+          {copied ? (
+            <>
+              <Check size={16} />
+              <span className="text-[11px] font-bold uppercase tracking-widest">Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy size={16} />
+              <span className="text-[11px] font-bold uppercase tracking-widest">Copy Prompt</span>
+            </>
+          )}
+        </button>
+      </div>
     </motion.div>
   );
 };

@@ -30,27 +30,27 @@ export const FilterModal: React.FC<FilterModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
           />
           
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-lg glass rounded-3xl overflow-hidden shadow-2xl"
+            className="relative w-full max-w-lg glass rounded-3xl overflow-hidden shadow-2xl shadow-black/10"
           >
-            <div className="p-8">
+            <div className="p-8 bg-white">
               <div className="flex justify-between items-center mb-8">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-brand-primary/10 flex items-center justify-center text-brand-primary">
                     <Layers size={20} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">Refine Results</h2>
-                    <p className="text-white/40 text-xs uppercase tracking-widest font-medium">Filter & Sort</p>
+                    <h2 className="text-xl font-bold text-slate-900">Refine Results</h2>
+                    <p className="text-slate-400 text-xs uppercase tracking-widest font-medium">Filter & Sort</p>
                   </div>
                 </div>
-                <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
+                <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition-colors text-slate-400">
                   <X size={20} />
                 </button>
               </div>
@@ -58,7 +58,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               <div className="space-y-8">
                 {/* Categories */}
                 <div>
-                  <div className="flex items-center gap-2 mb-4 text-white/60">
+                  <div className="flex items-center gap-2 mb-4 text-slate-500">
                     <Tag size={16} />
                     <label className="text-xs font-bold uppercase tracking-widest">Categories</label>
                   </div>
@@ -70,7 +70,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                         className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 border ${
                           selectedCategory === category 
                             ? 'bg-brand-primary border-brand-primary text-white shadow-lg shadow-brand-primary/20' 
-                            : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/10'
+                            : 'bg-slate-50 border-slate-100 text-slate-500 hover:text-slate-900 hover:bg-slate-100'
                         }`}
                       >
                         {category}
@@ -81,7 +81,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
 
                 {/* Sort Order */}
                 <div>
-                  <div className="flex items-center gap-2 mb-4 text-white/60">
+                  <div className="flex items-center gap-2 mb-4 text-slate-500">
                     <Calendar size={16} />
                     <label className="text-xs font-bold uppercase tracking-widest">Sort By Date</label>
                   </div>
@@ -90,8 +90,8 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       onClick={() => setSortBy('newest')}
                       className={`flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all ${
                         sortBy === 'newest'
-                          ? 'bg-brand-primary/10 border-brand-primary text-white'
-                          : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/5'
+                          ? 'bg-brand-primary/10 border-brand-primary text-brand-primary'
+                          : 'bg-slate-50 border-slate-100 text-slate-400 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       <SortDesc size={18} />
@@ -101,8 +101,8 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                       onClick={() => setSortBy('oldest')}
                       className={`flex items-center justify-center gap-3 p-4 rounded-2xl border transition-all ${
                         sortBy === 'oldest'
-                          ? 'bg-brand-primary/10 border-brand-primary text-white'
-                          : 'bg-white/5 border-white/10 text-white/40 hover:text-white hover:bg-white/5'
+                          ? 'bg-brand-primary/10 border-brand-primary text-brand-primary'
+                          : 'bg-slate-50 border-slate-100 text-slate-400 hover:text-slate-900 hover:bg-slate-100'
                       }`}
                     >
                       <SortAsc size={18} />
@@ -115,7 +115,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               <div className="mt-12">
                 <button 
                   onClick={onClose}
-                  className="btn-primary w-full py-4 rounded-2xl font-bold shadow-xl shadow-brand-primary/20"
+                  className="btn-primary w-full py-4 rounded-2xl font-bold shadow-xl shadow-black/5"
                 >
                   Apply Filters
                 </button>

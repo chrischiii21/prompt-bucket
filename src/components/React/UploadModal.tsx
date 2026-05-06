@@ -98,65 +98,72 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             className="relative w-full max-w-2xl glass rounded-3xl overflow-hidden shadow-2xl"
           >
-            <div className="p-8">
-              <div className="flex justify-between items-center mb-8">
-                <div>
-                  <h2 className="text-2xl font-bold">Add New Prompt</h2>
-                  <p className="text-white/40 text-sm">Share your masterpiece with the community.</p>
+            <div className="flex flex-col md:flex-row min-h-[500px]">
+              {/* Close button */}
+              <button 
+                onClick={onClose}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 transition-colors text-slate-400 z-50"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Left Side: Upload Area */}
+              <div className="w-full md:w-5/12 bg-slate-50 p-8 border-r border-slate-100 flex flex-col">
+                <div className="mb-8">
+                  <h2 className="text-xl font-bold text-slate-900">Add New Prompt</h2>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Share your masterpiece</p>
                 </div>
-                <button onClick={onClose} className="p-2 rounded-full hover:bg-white/10 transition-colors">
-                  <X size={24} />
-                </button>
+
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`flex-1 min-h-[300px] border-2 border-dashed rounded-[2rem] flex flex-col items-center justify-center p-6 transition-all cursor-pointer overflow-hidden relative group ${
+                    preview ? 'border-slate-100' : 'border-slate-200 hover:border-brand-primary/40 hover:bg-white'
+                  }`}
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                  {preview ? (
+                    <>
+                      <img src={preview} className="absolute inset-0 w-full h-full object-contain bg-slate-50" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <Upload className="text-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
+                        <ImageIcon size={24} />
+                      </div>
+                      <p className="text-xs font-bold text-slate-900 mb-1">Drop image here</p>
+                      <p className="text-[10px] text-slate-400">or click to browse</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Image Upload Area */}
-                  <div 
-                    onClick={() => fileInputRef.current?.click()}
-                    className="aspect-square rounded-2xl border-2 border-dashed border-white/10 hover:border-brand-primary/50 hover:bg-brand-primary/5 transition-all cursor-pointer overflow-hidden flex flex-col items-center justify-center relative group"
-                  >
-                    {preview ? (
-                      <>
-                        <img src={preview} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <Upload className="text-white" />
-                        </div>
-                      </>
-                    ) : (
-                      <div className="text-center p-6">
-                        <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4 text-white/20">
-                          <ImageIcon size={32} />
-                        </div>
-                        <p className="text-sm font-medium text-white/60">Drop your image here or <span className="text-brand-primary">browse</span></p>
-                        <p className="text-[10px] text-white/20 mt-2 uppercase tracking-widest">JPG, PNG, WebP up to 10MB</p>
-                      </div>
-                    )}
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange} 
-                      accept="image/*" 
-                      className="hidden" 
-                    />
-                  </div>
-
-                  {/* Form Fields */}
-                  <div className="space-y-4">
+              {/* Right Side: Form Area */}
+              <div className="flex-1 p-8 md:p-12 bg-white relative">
+                <form onSubmit={handleSubmit} className="space-y-6 h-full flex flex-col">
+                  <div className="space-y-6">
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-widest text-white/40 block mb-2">The Prompt</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">The Prompt</label>
                       <textarea
                         required
                         placeholder="Paste your AI prompt here..."
                         rows={4}
                         value={formData.prompt_text}
                         onChange={(e) => setFormData({ ...formData, prompt_text: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all resize-none"
+                        className="w-full h-32 p-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-brand-primary/50 transition-all outline-none text-sm text-slate-900 resize-none placeholder:text-slate-300"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-widest text-white/40 block mb-2">Category</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Category</label>
                       <div className="space-y-3">
                         <select
                           value={CATEGORIES.includes(formData.category) ? formData.category : 'Other'}
@@ -168,7 +175,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                               setFormData({ ...formData, category: '' });
                             }
                           }}
-                          className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all appearance-none"
+                          className="w-full h-12 px-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-brand-primary/50 transition-all outline-none text-sm text-slate-900 appearance-none"
                         >
                           {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                           <option value="Other">Other (Type custom...)</option>
@@ -182,43 +189,41 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                             placeholder="Type your custom category..."
                             value={formData.category}
                             onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                            className="w-full bg-white/5 border border-brand-primary/50 rounded-xl p-4 text-sm focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                            className="w-full h-12 px-4 rounded-2xl bg-white border border-brand-primary/40 focus:ring-2 focus:ring-brand-primary/10 transition-all outline-none text-sm text-slate-900"
                           />
                         )}
                       </div>
                     </div>
 
                     <div>
-                      <label className="text-xs font-bold uppercase tracking-widest text-white/40 block mb-2">Tags (comma separated)</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Tags (comma separated)</label>
                       <input
                         type="text"
                         placeholder="v6, cinematic, volumetric..."
                         value={formData.tags}
                         onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm focus:outline-none focus:ring-1 focus:ring-brand-primary transition-all"
+                        className="w-full h-12 px-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-brand-primary/50 transition-all outline-none text-sm text-slate-900 placeholder:text-slate-300"
                       />
                     </div>
                   </div>
-                </div>
 
-                <div className="flex justify-end pt-4">
-                  <button 
-                    disabled={loading || !file || !formData.prompt_text}
-                    className="btn-primary w-full md:w-auto min-w-[200px] flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="animate-spin" size={20} />
-                        <span>Uploading...</span>
-                      </>
-                    ) : (
-                      <>
+                  <div className="mt-auto pt-8 flex justify-end">
+                    <button 
+                      disabled={loading || !file || !formData.prompt_text}
+                      className="w-full h-14 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest text-[11px] hover:bg-slate-800 disabled:opacity-50 transition-all shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2.5"
+                    >
+                      {loading ? (
+                        <>
+                          <Loader2 className="animate-spin" size={16} />
+                          <span>Publishing...</span>
+                        </>
+                      ) : (
                         <span>Add to Bucket</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </div>
             </div>
           </motion.div>
         </div>
