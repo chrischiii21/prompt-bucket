@@ -1,0 +1,44 @@
+import React from 'react';
+import { motion } from 'framer-motion';
+import { FrameCard } from './FrameCard';
+import type { Frame, CharacterAnchor } from '../../../lib/aiScripter';
+
+interface TimelineProps {
+  frames: Frame[];
+  characterAnchor: CharacterAnchor;
+  status: 'Draft' | 'Approved';
+  onUpdateFrame: (index: number, updatedFrame: Frame) => void;
+}
+
+export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, status, onUpdateFrame }) => {
+  return (
+    <div className="relative pl-10 md:pl-16">
+      {/* The Timeline Rail */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-50 rounded-full" />
+      <div className="absolute left-0 top-0 h-1/2 w-1 bg-indigo-600 rounded-full" />
+      
+      <div className="space-y-16">
+        {frames.map((frame, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="relative"
+          >
+            {/* Timeline Node */}
+            <div className="absolute -left-[45px] md:-left-[69px] top-8 w-4 h-4 rounded-full bg-white border-4 border-indigo-600 z-10 shadow-lg shadow-indigo-200" />
+
+            <FrameCard 
+              frame={frame} 
+              index={index}
+              characterAnchor={characterAnchor}
+              isReadOnly={status === 'Approved'}
+              onUpdate={(updatedFrame) => onUpdateFrame(index, updatedFrame)}
+            />
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
+};

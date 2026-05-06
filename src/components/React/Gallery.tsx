@@ -4,7 +4,7 @@ import { SearchBar } from './SearchBar';
 import { UploadModal } from './UploadModal';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FilterModal } from './FilterModal';
-import { X, Layers, Plus } from 'lucide-react';
+import { X, Layers, Plus, Clapperboard } from 'lucide-react';
 
 interface Prompt {
   id: string;
@@ -77,12 +77,27 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
           </div>
         </motion.div>
 
-        <div className="mb-10">
+        <div className="mb-6">
           <SearchBar 
             searchQuery={searchQuery} 
             setSearchQuery={setSearchQuery} 
             onFilterClick={() => setIsFilterModalOpen(true)}
           />
+        </div>
+
+        <div className="mb-10">
+          <a 
+            href="/director"
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-all group"
+          >
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform">
+              <Clapperboard size={18} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold uppercase tracking-widest leading-none">Director's Suite</span>
+              <span className="text-[9px] font-bold opacity-60 mt-1">AI Video Bible</span>
+            </div>
+          </a>
         </div>
 
         <nav className="flex-1 space-y-1.5">

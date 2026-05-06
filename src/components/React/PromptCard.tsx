@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Play, ExternalLink, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProductionBibleModal } from './ProductionBibleModal';
 
 interface Prompt {
   id: string;
   prompt_text: string;
-  image_url: string;
-  category: string;
   tags?: string[];
+  video_url?: string;
+  created_at: string;
+  character_anchor?: any;
+  frames?: any[];
 }
 
 export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
   const [copied, setCopied] = useState(false);
+  const [isBibleOpen, setIsBibleOpen] = useState(false);
 
   const copyToClipboard = async () => {
     try {
@@ -38,10 +42,18 @@ export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
             loading="lazy"
           />
           <div className="absolute top-3 left-3">
-             <span className="bg-slate-900/90 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg shadow-xl">
+             <span className="bg-slate-900/90 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg shadow-xl flex items-center gap-1.5">
+               {prompt.category === 'Video' && <Play size={10} className="fill-current" />}
                {prompt.category}
              </span>
           </div>
+          {prompt.category === 'Video' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/0 transition-all">
+              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-2xl">
+                <Play size={24} className="fill-current ml-1" />
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
@@ -70,28 +82,59 @@ export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
       </div>
 
       {/* Action Bar */}
-      <div className="px-4 pb-4 mt-auto">
-        <button 
-          onClick={copyToClipboard}
-          className={`w-full h-11 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] border shadow-sm ${
-            copied 
-              ? 'bg-green-50 border-green-200 text-green-600' 
-              : 'bg-slate-900 text-white hover:bg-slate-800'
-          }`}
-        >
-          {copied ? (
-            <>
-              <Check size={16} />
-              <span className="text-[11px] font-bold uppercase tracking-widest">Copied!</span>
-            </>
-          ) : (
-            <>
-              <Copy size={16} />
-              <span className="text-[11px] font-bold uppercase tracking-widest">Copy Prompt</span>
-            </>
-          )}
-        </button>
+      <div className="px-4 pb-4 mt-auto flex gap-2">
+        {prompt.category === 'Video' ? (
+          <button 
+            onClick={() => setIsBibleOpen(true)}
+            className="flex-1 h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
+          >
+            <BookOpen size={16} />
+            <span className="text-[11px] font-bold uppercase tracking-widest">View Bible</span>
+          </button>
+        ) : (
+          <button 
+            onClick={copyToClipboard}
+            className={`flex-1 h-11 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] border shadow-sm ${
+              copied 
+                ? 'bg-green-50 border-green-200 text-green-600' 
+                : 'bg-slate-900 text-white hover:bg-slate-800'
+            }`}
+          >
+            {copied ? (
+              <>
+                <Check size={16} />
+                <span className="text-[11px] font-bold uppercase tracking-widest">Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy size={16} />
+                <span className="text-[11px] font-bold uppercase tracking-widest">Copy</span>
+              </>
+            )}
+          </button>
+        )}
+
+        {prompt.video_url && (
+          <a 
+            href={prompt.video_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="h-11 px-4 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
+          >
+            <ExternalLink size={16} />
+            <span className="text-[11px] font-bold uppercase tracking-widest">Watch</span>
+          </a>
+        )}
       </div>
+
+      <ProductionBibleModal 
+        isOpen={isBibleOpen}
+        onClose={() => setIsBibleOpen(false)}
+        projectName={prompt.prompt_text.split('\n\n')[0].replace('Concept: ', '')}
+        characterAnchor={prompt.character_anchor}
+        frames={prompt.frames || []}
+        videoUrl={prompt.video_url}
+      />
     </motion.div>
   );
 };

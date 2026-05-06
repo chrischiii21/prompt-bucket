@@ -1,0 +1,14 @@
+---
+import Layout from "../layouts/Layout.astro";
+import Header from "../components/Astro/Header.astro";
+import Footer from "../components/Astro/Footer.astro";
+import { DirectorSuite } from "../components/React/DirectorSuite/DirectorSuite";
+
+// No server-side fetching needed for now, handled by React state
+---
+
+<Layout title="Director's Suite | AI Video Production">
+  <main class="flex-grow">
+    <DirectorSuite client:load />
+  </main>
+</Layout>
