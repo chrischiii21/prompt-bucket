@@ -1,0 +1,27 @@
+---
+import { Search } from 'lucide-react';
+---
+
+<header class="sticky top-0 z-50 w-full border-b border-white/10 bg-black/50 backdrop-blur-xl">
+  <div class="container mx-auto px-4 h-20 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-primary to-brand-secondary flex items-center justify-center shadow-lg shadow-brand-primary/20">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
+      </div>
+      <span class="text-2xl font-bold tracking-tight">Prompt<span class="text-brand-primary">Bucket</span></span>
+    </div>
+
+    <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-white/60">
+      <a href="/" class="hover:text-white transition-colors">Explore</a>
+      <a href="#" class="hover:text-white transition-colors">Categories</a>
+      <a href="#" class="hover:text-white transition-colors">Community</a>
+    </nav>
+
+    <div class="flex items-center gap-4">
+      <button id="upload-btn" class="btn-primary flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+        <span>Upload Prompt</span>
+      </button>
+    </div>
+  </div>
+</header>
