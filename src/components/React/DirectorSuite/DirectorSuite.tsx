@@ -67,7 +67,7 @@ export const DirectorSuite: React.FC = () => {
         .insert([{
           prompt_text: combinedPrompt,
           category: 'Video',
-          tags: ['Video', 'Production Bible', projectData.total_duration],
+          tags: ['Video', 'Production Blueprint', projectData.total_duration],
           image_url: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800', // Video placeholder
           character_anchor: projectData.character_anchor,
           frames: projectData.frames
@@ -168,7 +168,7 @@ export const DirectorSuite: React.FC = () => {
                 </motion.h1>
                 <div className="flex items-center gap-2 mt-2">
                    <div className="h-0.5 w-8 bg-indigo-600"></div>
-                   <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">AI Video Production Bible</p>
+                   <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">AI Video Blueprint Creator</p>
                 </div>
              </div>
           </div>

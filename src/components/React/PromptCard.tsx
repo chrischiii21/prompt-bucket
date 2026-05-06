@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Copy, Check, Play, ExternalLink, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ProductionBibleModal } from './ProductionBibleModal';
+import { ProductionBlueprintModal } from './ProductionBlueprintModal';
 
 interface Prompt {
   id: string;
@@ -15,7 +15,7 @@ interface Prompt {
 
 export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
   const [copied, setCopied] = useState(false);
-  const [isBibleOpen, setIsBibleOpen] = useState(false);
+  const [isBlueprintOpen, setIsBlueprintOpen] = useState(false);
 
   const copyToClipboard = async () => {
     try {
@@ -85,11 +85,11 @@ export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
       <div className="px-4 pb-4 mt-auto flex gap-2">
         {prompt.category === 'Video' ? (
           <button 
-            onClick={() => setIsBibleOpen(true)}
+            onClick={() => setIsBlueprintOpen(true)}
             className="flex-1 h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
           >
             <BookOpen size={16} />
-            <span className="text-[11px] font-bold uppercase tracking-widest">View Bible</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest">View Blueprint</span>
           </button>
         ) : (
           <button 
@@ -127,9 +127,9 @@ export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
         )}
       </div>
 
-      <ProductionBibleModal 
-        isOpen={isBibleOpen}
-        onClose={() => setIsBibleOpen(false)}
+      <ProductionBlueprintModal 
+        isOpen={isBlueprintOpen}
+        onClose={() => setIsBlueprintOpen(false)}
         projectName={prompt.prompt_text.split('\n\n')[0].replace('Concept: ', '')}
         characterAnchor={prompt.character_anchor}
         frames={prompt.frames || []}

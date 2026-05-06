@@ -95,7 +95,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-bold uppercase tracking-widest leading-none">Director's Suite</span>
-              <span className="text-[9px] font-bold opacity-60 mt-1">AI Video Bible</span>
+              <span className="text-[9px] font-bold opacity-60 mt-1">AI Video Blueprint Creator</span>
             </div>
           </a>
         </div>

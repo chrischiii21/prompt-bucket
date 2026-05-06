@@ -13,7 +13,7 @@ interface CharacterAnchor {
   seed_prompt: string;
 }
 
-interface ProductionBibleModalProps {
+interface ProductionBlueprintModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectName: string;
@@ -22,7 +22,7 @@ interface ProductionBibleModalProps {
   videoUrl?: string;
 }
 
-export const ProductionBibleModal: React.FC<ProductionBibleModalProps> = ({ 
+export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> = ({ 
   isOpen, 
   onClose, 
   projectName, 
@@ -65,7 +65,7 @@ export const ProductionBibleModal: React.FC<ProductionBibleModalProps> = ({
                   </div>
                   <h2 className="text-2xl font-black text-slate-900 tracking-tight">{projectName}</h2>
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Production Bible • {frames.length} Scenes</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Production Blueprint • {frames.length} Scenes</p>
               </div>
               
               <div className="flex items-center gap-4">
