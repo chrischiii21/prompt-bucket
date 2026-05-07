@@ -1,6 +1,6 @@
 -- Run this in your Supabase SQL Editor to update prompts table
 
--- 1. Support detailed production bibles in the gallery
+-- 1. Support detailed production blueprints in the gallery
 alter table prompts add column if not exists character_anchor jsonb;
 alter table prompts add column if not exists frames jsonb;
 alter table prompts add column if not exists video_url text;

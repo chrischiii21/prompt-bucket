@@ -6,11 +6,12 @@ import type { Frame, CharacterAnchor } from '../../../lib/aiScripter';
 interface TimelineProps {
   frames: Frame[];
   characterAnchor: CharacterAnchor;
+  currentSummary: string;
   status: 'Draft' | 'Approved';
-  onUpdateFrame: (index: number, updatedFrame: Frame) => void;
+  onUpdateFrame: (index: number, updatedFrame: Frame, updatedSummary: string) => void;
 }
 
-export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, status, onUpdateFrame }) => {
+export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, currentSummary, status, onUpdateFrame }) => {
   return (
     <div className="relative pl-10 md:pl-16">
       {/* The Timeline Rail */}
@@ -33,8 +34,9 @@ export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, sta
               frame={frame} 
               index={index}
               characterAnchor={characterAnchor}
+              currentSummary={currentSummary}
               isReadOnly={status === 'Approved'}
-              onUpdate={(updatedFrame) => onUpdateFrame(index, updatedFrame)}
+              onUpdate={(updatedFrame, updatedSummary) => onUpdateFrame(index, updatedFrame, updatedSummary)}
             />
           </motion.div>
         ))}

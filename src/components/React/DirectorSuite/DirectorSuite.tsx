@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Save, CheckCircle, ArrowRight, Play, Copy, RefreshCw, Layout as LayoutIcon } from 'lucide-react';
+import { Sparkles, Save, CheckCircle, ArrowRight, Play, Copy, RefreshCw, Layout as LayoutIcon, UserCircle, X, Layers } from 'lucide-react';
 import * as aiScripter from '../../../lib/aiScripter';
 import type { ProjectData, Frame } from '../../../lib/aiScripter';
 import { Timeline } from './Timeline';
@@ -17,69 +17,269 @@ export const DirectorSuite: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [isSavingUrl, setIsSavingUrl] = useState(false);
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [originalPromptId, setOriginalPromptId] = useState<string | null>(null);
+  const [history, setHistory] = useState<ProjectData[]>([]);
+  const [currentVersionIndex, setCurrentVersionIndex] = useState<number>(-1);
+  const [lastApprovedSnapshot, setLastApprovedSnapshot] = useState<ProjectData | null>(null);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
-  const handleGenerate = async (concept: string, duration: number) => {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refineId = params.get('refine');
+    
+    if (refineId) {
+      loadProjectForRefinement(refineId);
+    }
+  }, []);
+
+  const loadProjectForRefinement = async (id: string) => {
     setIsGenerating(true);
     try {
-      const data = await aiScripter.generateVision(concept, duration);
-      setProjectData(data);
-      setStep('refining');
-    } catch (error) {
-      console.error('Generation failed:', error);
+      // Check both tables to ensure compatibility with library IDs
+      let { data: project, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error || !project) {
+        const { data: promptProject, error: promptError } = await supabase
+          .from('prompts')
+          .select('*')
+          .eq('id', id)
+          .single();
+        
+        if (promptError) throw promptError;
+        project = promptProject;
+      }
+
+      if (project) {
+        setOriginalPromptId(id);
+        const loadedHistory = project.history || [];
+        const loadedData = {
+          project_name: project.project_name || project.prompt_text?.split('\n\n')[0].replace('Concept: ', '') || 'Untitled Project',
+          summary: project.summary || '',
+          total_duration: project.total_duration || '30s',
+          character_anchor: project.character_anchor,
+          frames: project.frames,
+          id: project.id
+        };
+        setHistory(loadedHistory);
+        // The current DB record IS the last approved snapshot — restore it so re-approval archives correctly
+        setLastApprovedSnapshot(loadedData);
+        setProjectData(loadedData);
+        setCurrentVersionIndex(-1);
+        setStep('refining');
+        showToast('Project Loaded for Refinement');
+      }
+    } catch (err: any) {
+      console.error('Failed to load project:', err);
+      showToast('Could not load project for refinement', 'error');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleUpdateFrame = (index: number, updatedFrame: Frame) => {
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleGenerate = async (concept: string, duration: number, productionType: string, existingCharacter?: any) => {
+    setIsGenerating(true);
+    setError(null);
+    try {
+      const data = await aiScripter.generateVision(concept, duration, productionType, existingCharacter);
+      if (data && data.frames) {
+        // Archive the current working draft before replacing it
+        if (projectData && step === 'refining') {
+          setHistory(prev => [...prev, projectData]);
+          setCurrentVersionIndex(-1); // Reset to "Working Draft"
+        }
+        setProjectData({
+          project_name: data.project_name || concept,
+          summary: data.summary || '',
+          total_duration: duration + 's',
+          character_anchor: data.character_anchor || existingCharacter,
+          frames: data.frames,
+          status: 'Draft'
+        });
+        setStep('refining');
+        showToast('Production Blueprint Generated');
+      } else {
+        throw new Error('AI returned an empty blueprint.');
+      }
+    } catch (error: any) {
+      console.error('Generation failed:', error);
+      showToast(error.message || 'Generation failed', 'error');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleUpdateFrame = (index: number, updatedFrame: Frame, updatedSummary: string) => {
     if (!projectData) return;
     const newFrames = [...projectData.frames];
     newFrames[index] = updatedFrame;
-    setProjectData({ ...projectData, frames: newFrames });
+    setProjectData({ ...projectData, frames: newFrames, summary: updatedSummary });
+  };
+
+  // workingDraft holds the latest live version so we can restore it after viewing history
+  const [workingDraft, setWorkingDraft] = useState<ProjectData | null>(null);
+
+  const handleSwitchVersion = (index: number) => {
+    if (index === -1) {
+      // Restore the working draft
+      if (workingDraft) {
+        setProjectData(workingDraft);
+      }
+      setCurrentVersionIndex(-1);
+      return;
+    }
+    const version = history[index];
+    if (version) {
+      // Save current working state before time-traveling
+      if (currentVersionIndex === -1) {
+        setWorkingDraft(projectData);
+      }
+      setProjectData(version);
+      setCurrentVersionIndex(index);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!projectData) return;
+    setIsSaving(true);
+    try {
+      const projectPayload = {
+        project_name: projectData.project_name,
+        total_duration: projectData.total_duration,
+        status: 'Draft',
+        character_anchor: projectData.character_anchor,
+        frames: projectData.frames,
+        summary: projectData.summary,
+        history: history // Persist the multiverse
+      };
+
+      let newProjectId = projectData.id;
+      
+      if (projectData.id) {
+        await supabase.from('projects').update(projectPayload).eq('id', projectData.id);
+      } else {
+        const { data, error } = await supabase.from('projects').insert(projectPayload).select();
+        if (error) throw error;
+        newProjectId = data?.[0]?.id;
+      }
+
+      // 2. Save to prompts (Library)
+      const librarySummary = projectData.summary || 'Production synthesis complete.';
+      const promptPayload = {
+        prompt_text: `Concept: ${projectData.project_name}\n\nNarrative: ${librarySummary}`,
+        summary: librarySummary,
+        image_url: projectData.character_anchor?.image_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop',
+        category: 'Video',
+        character_anchor: projectData.character_anchor,
+        frames: projectData.frames,
+        project_id: newProjectId,
+        tags: [projectData.project_name.toLowerCase(), 'director-suite', 'blueprint']
+      };
+
+      if (originalPromptId) {
+        await supabase.from('prompts').update(promptPayload).eq('id', originalPromptId);
+      } else {
+        await supabase.from('prompts').insert(promptPayload);
+      }
+
+      setProjectData({ ...projectData, id: newProjectId, status: 'Draft' });
+      setProjectId(newProjectId);
+      setToast({ message: 'Vision Saved to Library!', type: 'success' });
+    } catch (err: any) {
+      console.error('Save failed:', err);
+      setToast({ message: err.message || 'Failed to save to database', type: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleApprove = async () => {
     if (!projectData) return;
     setIsSaving(true);
-    setError(null);
     try {
-      // 1. Save to projects table
-      const { data: projectDataRes, error: dbError } = await supabase
-        .from('projects')
-        .insert([{
+      let finalProjectId = projectData.id;
+
+      // Build updated history: archive the PREVIOUS approved version before saving the new one
+      const updatedHistory = lastApprovedSnapshot
+        ? [...history, lastApprovedSnapshot]
+        : history;
+
+      // 1. First-time approval — insert new records
+      if (!finalProjectId) {
+        const projectPayload = {
           project_name: projectData.project_name,
           total_duration: projectData.total_duration,
           status: 'Approved',
           character_anchor: projectData.character_anchor,
-          frames: projectData.frames
-        }])
-        .select();
+          frames: projectData.frames,
+          summary: projectData.summary,
+          history: updatedHistory
+        };
+        const { data, error } = await supabase.from('projects').insert(projectPayload).select();
+        if (error) throw error;
+        finalProjectId = data?.[0]?.id;
 
-      if (dbError) throw dbError;
-      const newProjectId = projectDataRes?.[0]?.id;
-      setProjectId(newProjectId);
-
-      // 2. Cross-post to prompt library (prompts table)
-      const combinedPrompt = `Concept: ${projectData.project_name}\n\nCharacter Anchor: ${projectData.character_anchor.description}\n\nFrames: ${projectData.frames.length} scenes, ${projectData.total_duration}`;
-      
-      const { error: promptError } = await supabase
-        .from('prompts')
-        .insert([{
-          prompt_text: combinedPrompt,
+        const librarySummary = projectData.summary || 'Production synthesis complete.';
+        const { data: promptData } = await supabase.from('prompts').insert({
+          prompt_text: `Concept: ${projectData.project_name}\n\nNarrative: ${librarySummary}`,
+          summary: librarySummary,
+          image_url: projectData.character_anchor?.image_url || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop',
           category: 'Video',
-          tags: ['Video', 'Production Blueprint', projectData.total_duration],
-          image_url: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800', // Video placeholder
           character_anchor: projectData.character_anchor,
-          frames: projectData.frames
-        }]);
+          frames: projectData.frames,
+          project_id: finalProjectId,
+          history: updatedHistory,
+          tags: [projectData.project_name.toLowerCase(), 'director-suite', 'blueprint']
+        }).select();
+        if (promptData?.[0]?.id) setOriginalPromptId(promptData[0].id);
 
-      if (promptError) console.error('Failed to post to library:', promptError);
+      } else {
+        // 2. Re-approval — update existing records with new data + archived history
+        const { error: projError } = await supabase
+          .from('projects')
+          .update({
+            status: 'Approved',
+            character_anchor: projectData.character_anchor,
+            frames: projectData.frames,
+            summary: projectData.summary,
+            history: updatedHistory
+          })
+          .eq('id', finalProjectId);
+        if (projError) throw projError;
 
-      setProjectData({ ...projectData, status: 'Approved' });
+        // Also keep the library prompt in sync
+        if (originalPromptId) {
+          const librarySummary = projectData.summary || 'Production synthesis complete.';
+          await supabase.from('prompts').update({
+            summary: librarySummary,
+            prompt_text: `Concept: ${projectData.project_name}\n\nNarrative: ${librarySummary}`,
+            character_anchor: projectData.character_anchor,
+            frames: projectData.frames,
+            history: updatedHistory
+          }).eq('id', originalPromptId);
+        }
+      }
+
+      // Commit the updated history and snapshot this approval as the new baseline
+      const approvedData = { ...projectData, id: finalProjectId, status: 'Approved' };
+      setHistory(updatedHistory);
+      setLastApprovedSnapshot(approvedData);
+      setCurrentVersionIndex(-1); // Always show the newest version
+      setProjectData(approvedData);
+      setProjectId(finalProjectId);
       setStep('approved');
+      setToast({ message: 'Production Vision Approved!', type: 'success' });
     } catch (err: any) {
-      console.error('Approval failed:', err);
-      setError(err.message || 'Failed to save to Supabase. Make sure the "projects" table exists with correct permissions.');
+      console.error('Failed to approve:', err);
+      setToast({ message: `Failed to approve: ${err.message}`, type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -95,10 +295,10 @@ export const DirectorSuite: React.FC = () => {
         .eq('id', projectId);
 
       if (updateError) throw updateError;
-      alert('Video link saved successfully!');
+      showToast('Video URL Synchronized!');
     } catch (err: any) {
       console.error('Save link failed:', err);
-      setError('Failed to save video link.');
+      showToast('Failed to save link', 'error');
     } finally {
       setIsSavingUrl(false);
     }
@@ -110,30 +310,34 @@ export const DirectorSuite: React.FC = () => {
     setError(null);
     try {
       // 1. Refine the character anchor itself
-      const newAnchor = await aiScripter.refineCharacter(projectData.character_anchor, tweak);
+      const result = await aiScripter.refineCharacter(projectData.character_anchor, tweak, projectData.summary);
+      const newAnchor = result.character_anchor;
+      let runningSummary = result.summary;
       
       // 2. Propagate changes to all frames
-      // To keep it efficient and consistent, we'll ask the AI to re-verify each frame's prompt 
-      // with the new anchor description.
       const updatedFrames = await Promise.all(
         projectData.frames.map(async (frame) => {
-          const newPrompt = await aiScripter.refineFrame(
+          const frameResult = await aiScripter.refineFrame(
             frame, 
             `Synchronize this scene with the new character details: ${newAnchor.description}`, 
-            newAnchor
+            newAnchor,
+            runningSummary
           );
-          return { ...frame, final_prompt: newPrompt };
+          runningSummary = frameResult.summary;
+          return { ...frame, final_prompt: frameResult.final_prompt };
         })
       );
 
       setProjectData({
         ...projectData,
         character_anchor: newAnchor,
+        summary: runningSummary,
         frames: updatedFrames
       });
+      showToast('Character & Frames Re-Synchronized!');
     } catch (err: any) {
       console.error('Character refinement failed:', err);
-      setError(err.message || 'Failed to refine character.');
+      showToast(err.message || 'Refinement failed', 'error');
     } finally {
       setIsRefiningCharacter(false);
     }
@@ -193,8 +397,22 @@ export const DirectorSuite: React.FC = () => {
               </button>
             )}
             {step === 'approved' && (
-              <div className="px-6 py-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
-                <CheckCircle size={16} /> Vision Approved
+              <div className="flex items-center gap-3">
+                <div className="px-6 py-3 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+                  <CheckCircle size={16} /> Vision Approved
+                </div>
+                <a 
+                  href="/"
+                  className="px-6 py-3 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
+                >
+                  <Layers size={14} /> Go to Library
+                </a>
+                <button 
+                  onClick={() => setStep('refining')}
+                  className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+                >
+                  <RefreshCw size={14} /> Refine Further
+                </button>
               </div>
             )}
           </div>
@@ -226,55 +444,70 @@ export const DirectorSuite: React.FC = () => {
                   <div className="sticky top-8 bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16 rounded-full" />
                     
-                    <div className="flex items-center gap-2 mb-6">
-                       <div className="h-px w-6 bg-indigo-600"></div>
-                       <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-600">Character Anchor</span>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-2">
+                        <div className="h-px w-6 bg-indigo-600"></div>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-600">Character Anchor</span>
+                      </div>
                     </div>
                     
-                    <h3 className="text-2xl font-black text-slate-900 mb-4 tracking-tight">The Protagonist</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed mb-6 italic font-medium">
-                      "{projectData.character_anchor.description}"
-                    </p>
+                    <h3 className="text-xl font-black text-slate-900 mb-3 tracking-tight">The Protagonist</h3>
 
-                    {projectData.status === 'Draft' && (
-                      <div className="space-y-3 mb-8">
-                        <div className="relative">
-                          <input 
-                            type="text"
-                            placeholder="Tweak character (e.g. 'add red glasses')"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 pr-12 text-xs text-slate-900 focus:outline-none focus:border-indigo-500/50 transition-all font-medium"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
-                                handleRefineCharacter(e.currentTarget.value);
-                                e.currentTarget.value = '';
-                              }
-                            }}
-                          />
-                          <button 
-                            disabled={isRefiningCharacter}
-                            onClick={(e) => {
-                              const input = e.currentTarget.previousElementSibling as HTMLInputElement;
-                              handleRefineCharacter(input.value);
-                              input.value = '';
-                            }}
-                            className="absolute right-2 top-2 p-1.5 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-all disabled:opacity-50"
-                          >
-                            {isRefiningCharacter ? <RefreshCw size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                          </button>
-                        </div>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest text-center">Propagates to all frames</p>
-                      </div>
-                    )}
-                    
-                    <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-8">
-                      <div className="text-[9px] text-slate-400 uppercase font-black mb-3 tracking-widest">Seed Prompt</div>
-                      <div className="text-[11px] text-slate-600 font-mono break-words leading-relaxed">
-                        {projectData.character_anchor.seed_prompt}
+                    {/* Read-only Description */}
+                    <div className="mb-5">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Description</label>
+                      <div className="border-l-2 border-indigo-100 pl-4 py-1">
+                        <p className="text-[11px] font-bold text-slate-800 leading-relaxed italic">
+                          "{projectData.character_anchor?.description || 'Generic Production Style'}"
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2.5 p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-[10px] font-bold text-emerald-600 uppercase tracking-widest">
-                      <CheckCircle size={14} /> Character Synced
+                    {/* Read-only Seed Prompt */}
+                    <div className="mb-6">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Seed Prompt</label>
+                      <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <p className="text-[10px] text-indigo-200 font-mono break-words leading-relaxed">
+                          {projectData.character_anchor?.seed_prompt || 'Standard Cinematic Seed'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* AI Refine — always available, affects description + seed prompt + all frames */}
+                    <div className="space-y-3 mb-6">
+                      <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">AI Refine</label>
+                      <div className="relative">
+                        <input 
+                          type="text"
+                          placeholder="e.g. 'add red glasses', 'futuristic outfit', 'slow confident walk'..."
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 pr-12 text-[11px] text-slate-900 focus:outline-none focus:border-indigo-500 transition-all font-bold"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleRefineCharacter(e.currentTarget.value);
+                              e.currentTarget.value = '';
+                            }
+                          }}
+                        />
+                        <button 
+                          disabled={isRefiningCharacter}
+                          onClick={(e) => {
+                            const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                            handleRefineCharacter(input.value);
+                            input.value = '';
+                          }}
+                          className="absolute right-2 top-2 w-8 h-8 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center justify-center"
+                        >
+                          {isRefiningCharacter ? <RefreshCw size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                        </button>
+                      </div>
+                      <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em] text-center">Updates description, seed prompt & all frames</p>
+                    </div>
+
+                    <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl text-[10px] font-black text-emerald-600 uppercase tracking-[0.15em]">
+                      <div className="w-6 h-6 rounded-lg bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200">
+                        <CheckCircle size={14} />
+                      </div>
+                      Character Synced
                     </div>
 
                     {step === 'approved' && (
@@ -311,9 +544,72 @@ export const DirectorSuite: React.FC = () => {
 
                 {/* Timeline Main View */}
                 <div className="lg:col-span-3">
+                  {/* Version History Toggle — only visible when refinements exist */}
+                  {history.length > 0 && (
+                    <div className="flex items-center gap-2 mb-6 bg-slate-50/50 p-1.5 rounded-2xl border border-slate-100 w-fit">
+                      <button 
+                        onClick={() => handleSwitchVersion(-1)}
+                        className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                          currentVersionIndex === -1 ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'text-slate-400 hover:text-slate-600'
+                        }`}
+                      >
+                        Working Draft
+                      </button>
+                      {history.map((_, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSwitchVersion(idx)}
+                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                            currentVersionIndex === idx ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-400 hover:text-slate-600'
+                          }`}
+                        >
+                          V{idx + 1}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Story Summary Card */}
+                <div className="mb-12 p-10 bg-white rounded-[3rem] border border-slate-100 relative overflow-hidden group shadow-sm">
+                  <div className="absolute top-0 right-0 p-10 text-slate-50 group-hover:text-indigo-500/5 transition-colors pointer-events-none">
+                    <Sparkles size={140} />
+                  </div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="h-px w-8 bg-indigo-600"></div>
+                        <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Director's Narrative Summary</h3>
+                      </div>
+                      {!projectData.summary && (
+                        <button 
+                          onClick={() => {/* Trigger AI synthesis logic */}}
+                          className="flex items-center gap-2 text-[9px] font-black text-indigo-400 hover:text-indigo-600 uppercase tracking-widest transition-colors"
+                        >
+                          <RefreshCw size={12} /> Auto-Synthesize Story
+                        </button>
+                      )}
+                    </div>
+                    <textarea
+                      ref={(el) => {
+                        if (el) {
+                          el.style.height = 'auto';
+                          el.style.height = (el.scrollHeight + 5) + 'px';
+                        }
+                      }}
+                      value={projectData.summary}
+                      onChange={(e) => {
+                        setProjectData({ ...projectData, summary: e.target.value });
+                      }}
+                      placeholder="Enter the overarching story summary here..."
+                      className="w-full bg-transparent text-sm font-bold text-slate-800 leading-relaxed italic pr-24 resize-none focus:outline-none placeholder:text-slate-200 border-none p-0 overflow-hidden min-h-[60px] transition-all duration-200"
+                    />
+                  </div>
+                </div>
+
                   <Timeline 
                     frames={projectData.frames} 
-                    characterAnchor={projectData.character_anchor}
+                    characterAnchor={projectData.character_anchor || { description: 'Generic Style', seed_prompt: 'Cinematic' }}
+                    currentSummary={projectData.summary || ''}
                     status={projectData.status}
                     onUpdateFrame={handleUpdateFrame}
                   />
@@ -329,6 +625,53 @@ export const DirectorSuite: React.FC = () => {
         <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-100/50 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/30 blur-[120px] rounded-full" />
       </div>
+
+      {/* Global Loading Overlay */}
+      <AnimatePresence>
+        {isGenerating && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center text-white"
+          >
+            <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 mb-8 animate-bounce">
+              <Sparkles size={48} className="animate-pulse" />
+            </div>
+            <h3 className="text-2xl font-black mb-2 uppercase tracking-widest">Architecting Vision</h3>
+            <p className="text-indigo-200 text-xs font-bold uppercase tracking-[0.3em]">Building your production blueprint...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notifications */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20, x: 20 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed bottom-8 right-8 z-[200]"
+          >
+            <div className={`px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-md border ${
+              toast.type === 'success' 
+                ? 'bg-emerald-500/90 text-white border-emerald-400' 
+                : 'bg-red-500/90 text-white border-red-400'
+            } flex items-center gap-3 min-w-[280px]`}>
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                {toast.type === 'success' ? <CheckCircle size={18} /> : <X size={18} />}
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">{toast.type}</p>
+                <p className="text-sm font-bold">{toast.message}</p>
+              </div>
+              <button onClick={() => setToast(null)} className="opacity-50 hover:opacity-100 transition-opacity">
+                <X size={16} />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

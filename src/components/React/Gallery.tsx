@@ -13,6 +13,14 @@ interface Prompt {
   category: string;
   tags?: string[];
   created_at: string;
+  character_anchor?: any;
+  frames?: any[];
+  summary?: string;
+}
+
+interface Toast {
+  message: string;
+  type: 'success' | 'error';
 }
 
 interface GalleryProps {
@@ -21,6 +29,17 @@ interface GalleryProps {
 
 export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
   const [prompts, setPrompts] = useState<Prompt[]>(initialPrompts);
+  const [toast, setToast] = useState<Toast | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleDeleteSuccess = (id: string) => {
+    setPrompts(prev => prev.filter(p => p.id !== id));
+    showToast('Production permanently deleted from database');
+  };
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -176,7 +195,10 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
                   transition={{ duration: 0.4, delay: idx * 0.05 }}
                   className="break-inside-avoid"
                 >
-                  <PromptCard prompt={prompt} />
+                  <PromptCard 
+                    prompt={prompt} 
+                    onDeleted={() => handleDeleteSuccess(prompt.id)}
+                  />
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -213,6 +235,32 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
         onClose={() => setIsUploadModalOpen(false)} 
         onSuccess={handleUploadSuccess}
       />
+
+      {/* Gallery Toasts */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20, x: 20 }}
+            animate={{ opacity: 1, y: 0, x: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed bottom-8 right-8 z-[500]"
+          >
+            <div className={`px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-md border ${
+              toast.type === 'success' 
+                ? 'bg-emerald-500/90 text-white border-emerald-400' 
+                : 'bg-red-500/90 text-white border-red-400'
+            } flex items-center gap-3 min-w-[280px]`}>
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                {toast.type === 'success' ? <Clapperboard size={18} /> : <X size={18} />}
+              </div>
+              <div className="flex-1">
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-70">Library Activity</p>
+                <p className="text-sm font-bold">{toast.message}</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

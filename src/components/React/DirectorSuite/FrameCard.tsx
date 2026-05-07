@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Copy, RefreshCw, Check, Sparkles, Film } from 'lucide-react';
+import { Copy, RefreshCw, Check, Sparkles, Film, Clock } from 'lucide-react';
 import { refineFrame, type Frame, type CharacterAnchor } from '../../../lib/aiScripter';
 
 interface FrameCardProps {
   frame: Frame;
   index: number;
   characterAnchor: CharacterAnchor;
+  currentSummary: string;
   isReadOnly: boolean;
-  onUpdate: (updatedFrame: Frame) => void;
+  onUpdate: (updatedFrame: Frame, updatedSummary: string) => void;
 }
 
-export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnchor, isReadOnly, onUpdate }) => {
+export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnchor, currentSummary, isReadOnly, onUpdate }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tweak, setTweak] = useState('');
   const [isRefining, setIsRefining] = useState(false);
@@ -21,8 +22,8 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
     if (!tweak.trim()) return;
     setIsRefining(true);
     try {
-      const newPrompt = await refineFrame(frame, tweak, characterAnchor);
-      onUpdate({ ...frame, final_prompt: newPrompt });
+      const result = await refineFrame(frame, tweak, characterAnchor, currentSummary);
+      onUpdate({ ...frame, final_prompt: result.final_prompt }, result.summary);
       setTweak('');
       setIsEditing(false);
     } catch (error) {
@@ -31,6 +32,16 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
       setIsRefining(false);
     }
   };
+
+  const getDurationInSeconds = (d: string) => parseInt(d) || 0;
+  const getTimestampInSeconds = (t: string) => {
+    const [m, s] = t.split(':').map(Number);
+    return (m * 60) + s;
+  };
+
+  const startSec = getTimestampInSeconds(frame.timestamp);
+  const durSec = getDurationInSeconds(frame.duration);
+  const endSec = startSec + durSec;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(frame.final_prompt);
@@ -46,7 +57,14 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
           <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
             <Film size={16} className="text-indigo-600" /> Frame {index + 1}
           </div>
-          <div className="text-2xl font-black mb-2 text-slate-900 tracking-tight">{frame.timestamp}</div>
+          <div className="mb-4">
+            <div className="text-2xl font-black text-slate-900 tracking-tight leading-none mb-1">
+              {startSec} - {endSec} <span className="text-xs text-slate-400 font-bold ml-1 uppercase">sec</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest">
+              <Clock size={10} /> Duration: {frame.duration || '3s'}
+            </div>
+          </div>
           <div className="inline-block px-3 py-1 bg-indigo-50 border border-indigo-100 rounded-lg text-[9px] font-black text-indigo-600 uppercase tracking-widest">
             {frame.shot_type}
           </div>

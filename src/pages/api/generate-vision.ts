@@ -2,44 +2,85 @@ import type { APIRoute } from 'astro';
 
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
-  const { concept, durationInSeconds } = body;
+  const { concept, durationInSeconds, productionType, existingCharacter } = body;
   
   const apiKey = import.meta.env.GROQ_API_KEY;
 
   if (!apiKey) {
-    console.error('API Error: GROQ_API_KEY is not defined.');
     return new Response(JSON.stringify({ 
       error: 'Groq API key missing. Please add GROQ_API_KEY to your .env file.' 
     }), { status: 500 });
   }
 
-  const secondsPerFrame = 3;
-  const frameCount = Math.ceil(durationInSeconds / secondsPerFrame);
+  const isFlexible = durationInSeconds === 0;
+  
+  // Base instructions for duration
+  const durationInstruction = isFlexible 
+    ? `You have the freedom to decide the optimal duration for this story. 
+       Choose a total duration between 10 and 45 seconds. 
+       Break it into logical scenes with varying durations (2s to 6s per scene).`
+    : `Create a "Production Blueprint" for a ${durationInSeconds} second video.
+       Divide the video into logical scenes with varying durations (2s to 6s per scene) that sum up to exactly ${durationInSeconds} seconds.`;
+
+  // Production Type specific logic
+  let modalityInstruction = '';
+  let characterContext = '';
+
+  if (productionType === 'character') {
+    modalityInstruction = `This is a CHARACTER-DRIVEN narrative. Focus on human-like identity, facial expressions, and consistent character performance.`;
+    characterContext = existingCharacter 
+      ? `USE THIS EXISTING CHARACTER:
+         Description: ${existingCharacter.description}
+         Seed Prompt: ${existingCharacter.seed_prompt}
+         Maintain this identity exactly.`
+      : `Create a "Character Anchor": A detailed physical description of the main character that must remain constant.`;
+  } else if (productionType === 'text') {
+    modalityInstruction = `This is a TEXT & GRAPHICS video (e.g., Quiz, Social Ad, Info-card). 
+    Focus on kinetic typography, text overlays, and generic background visuals. 
+    NO HUMAN FACES or specific characters required. 
+    Final prompts should describe the background scenery AND the specific text that appears on screen.`;
+    characterContext = `Create a "Visual Design Language": Instead of a character, describe the consistent aesthetic, color palette, and font style. Store this in the character_anchor.description field.`;
+  } else {
+    modalityInstruction = `This is an EXPERIMENTAL/ABSTRACT video. 
+    Avoid showing faces. Focus on landscapes, product close-ups, macro shots, or abstract textures. 
+    The mood should be atmospheric and non-human centric.`;
+    characterContext = `Create an "Atmospheric Anchor": Describe the consistent visual mood and recurring non-human elements. Store this in the character_anchor.description field.`;
+  }
 
   const systemPrompt = `You are a professional AI Video Director. 
-Your task is to take a concept and create a "Production Bible" for a ${durationInSeconds} second video.
-Divide the video into ${frameCount} scenes of approximately ${secondsPerFrame} seconds each.
+Your task is to take a concept and create a "Production Blueprint".
 
-First, create a "Character Anchor": A detailed physical description of the main character that must remain constant.
-Then, for each scene, generate a timestamped "Beat Sheet" with a shot type and a final prompt.
+${modalityInstruction}
 
-CRITICAL RULE: For every scene's final prompt, you MUST include the "Character Anchor" description at the start to ensure visual continuity.
+${durationInstruction}
+
+${characterContext}
+
+First, write a 2-3 sentence "Story Summary" that describes the overarching narrative flow.
+Then, for each scene, generate a timestamped "Beat Sheet" with a duration, shot type, and a final prompt.
+
+CRITICAL RULE: For every scene's final prompt, you MUST include the anchor description (character or visual style) at the start to ensure visual continuity.
 
 Format your response as a valid JSON object:
 {
   "project_name": "...",
+  "summary": "...",
+  "total_duration": "...", 
   "character_anchor": {
     "description": "...",
     "seed_prompt": "..."
   },
   "frames": [
     {
-      "timestamp": "00:00 - 00:03",
+      "timestamp": "00:00",
+      "duration": "3s",
       "shot_type": "...",
       "final_prompt": "..."
     }
   ]
-}`;
+}
+
+Note: If the production type is 'text', the final_prompt field MUST include the exact text to be displayed (e.g., "TEXT: 'Who is the fastest cat?'").`;
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -60,19 +101,27 @@ Format your response as a valid JSON object:
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Groq API Error:', errorData);
       return new Response(JSON.stringify({ error: errorData.error?.message || 'Groq API call failed' }), { status: response.status });
     }
 
     const data = await response.json();
     const visionData = JSON.parse(data.choices[0].message.content);
     
-    return new Response(JSON.stringify({ ...visionData, status: 'Draft', total_duration: `${durationInSeconds}s` }), {
+    // Maintain image_url if applicable
+    if (visionData.character_anchor) {
+      visionData.character_anchor.image_url = existingCharacter?.image_url || null;
+    }
+
+    // Ensure total_duration is set correctly if not provided by AI
+    if (!visionData.total_duration) {
+      visionData.total_duration = isFlexible ? '30s' : `${durationInSeconds}s`;
+    }
+
+    return new Response(JSON.stringify({ ...visionData, status: 'Draft' }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error: any) {
-    console.error('Server Error:', error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 };

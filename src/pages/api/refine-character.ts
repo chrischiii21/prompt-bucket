@@ -2,26 +2,29 @@ import type { APIRoute } from 'astro';
 
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
-  const { characterAnchor, tweak } = body;
+  const { characterAnchor, tweak, currentSummary } = body;
   
   const apiKey = import.meta.env.GROQ_API_KEY;
 
   if (!apiKey) {
-    console.error('API Error: GROQ_API_KEY is not defined.');
     return new Response(JSON.stringify({ error: 'Groq API key missing.' }), { status: 500 });
   }
 
-  const systemPrompt = `You are an AI Character Designer. 
-Refine the following character description based on the user's tweak. 
-Maintain the core essence but apply the requested changes.
+  const systemPrompt = `You are an AI Character Designer and Narrative Consultant. 
+Refine the character description based on the user's tweak. 
+Also, if the character change significantly alters the story's tone or flow, update the Story Summary accordingly.
 
-Current Description: ${characterAnchor.description}
+Current Character: ${characterAnchor.description}
+Current Summary: ${currentSummary}
 User Tweak: ${tweak}
 
-Return a valid JSON object with the updated description and a new seed prompt:
+Return a valid JSON object:
 {
-  "description": "...",
-  "seed_prompt": "..."
+  "character_anchor": {
+    "description": "...",
+    "seed_prompt": "..."
+  },
+  "summary": "..."
 }`;
 
   try {
@@ -32,10 +35,10 @@ Return a valid JSON object with the updated description and a new seed prompt:
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Refine this character.` }
+          { role: 'user', content: `Refine the character and update the summary if needed.` }
         ],
         response_format: { type: 'json_object' }
       })
@@ -43,19 +46,17 @@ Return a valid JSON object with the updated description and a new seed prompt:
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.error('Groq API Error:', errorData);
       return new Response(JSON.stringify({ error: errorData.error?.message || 'Groq API call failed' }), { status: response.status });
     }
 
     const data = await response.json();
-    const updatedAnchor = JSON.parse(data.choices[0].message.content);
+    const result = JSON.parse(data.choices[0].message.content);
     
-    return new Response(JSON.stringify(updatedAnchor), {
+    return new Response(JSON.stringify(result), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
     });
   } catch (error: any) {
-    console.error('Server Error:', error);
     return new Response(JSON.stringify({ error: error.message }), { status: 500 });
   }
 };

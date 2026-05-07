@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Copy, Check, Play, ExternalLink, BookOpen } from 'lucide-react';
+import { Copy, Check, Play, ExternalLink, BookOpen, RefreshCw, Trash2 } from 'lucide-react';
+import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProductionBlueprintModal } from './ProductionBlueprintModal';
 
@@ -11,11 +12,63 @@ interface Prompt {
   created_at: string;
   character_anchor?: any;
   frames?: any[];
+  summary?: string;
+  project_id?: string;
+  history?: any[];
+  image_url?: string;
+  category?: string;
 }
 
-export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
+export const PromptCard: React.FC<{ 
+  prompt: Prompt;
+  onDeleted?: () => void;
+}> = ({ prompt, onDeleted }) => {
   const [copied, setCopied] = useState(false);
   const [isBlueprintOpen, setIsBlueprintOpen] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    setShowConfirm(false);
+    try {
+      // Stage 1: Delete from library (prompts table)
+      const { error, count } = await supabase
+        .from('prompts')
+        .delete({ count: 'exact' })
+        .eq('id', prompt.id);
+      
+      if (error) throw error;
+      
+      if (count === 0) {
+        throw new Error('Database denied deletion. Check your Supabase RLS policies.');
+      }
+
+      // Stage 2: Clean up internal project (projects table)
+      if (prompt.project_id) {
+        await supabase
+          .from('projects')
+          .delete()
+          .eq('id', prompt.project_id);
+      }
+
+      setIsDeleted(true);
+      if (onDeleted) onDeleted();
+    } catch (err: any) {
+      console.error('Failed to delete:', err);
+      alert(`Could not delete production: ${err.message || 'Access Denied'}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowConfirm(true);
+  };
+
+  if (isDeleted) return null;
 
   const copyToClipboard = async () => {
     try {
@@ -89,7 +142,7 @@ export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
             className="flex-1 h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
           >
             <BookOpen size={16} />
-            <span className="text-[11px] font-bold uppercase tracking-widest">View Blueprint</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest">Blueprint</span>
           </button>
         ) : (
           <button 
@@ -114,6 +167,27 @@ export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
           </button>
         )}
 
+        {prompt.category === 'Video' && (
+          <div className="flex gap-2">
+            <a 
+              href={`/director?refine=${prompt.id}`}
+              className="h-11 px-4 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-indigo-200"
+              title="Refine in Director Suite"
+            >
+              <RefreshCw size={16} />
+              <span className="text-[11px] font-bold uppercase tracking-widest">Refine</span>
+            </a>
+            <button 
+              onClick={handleDeleteClick}
+              disabled={isDeleting}
+              className="w-11 h-11 rounded-xl bg-red-50 border border-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center active:scale-95 shadow-sm"
+              title="Delete Production"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        )}
+
         {prompt.video_url && (
           <a 
             href={prompt.video_url}
@@ -133,8 +207,53 @@ export const PromptCard: React.FC<{ prompt: Prompt }> = ({ prompt }) => {
         projectName={prompt.prompt_text.split('\n\n')[0].replace('Concept: ', '')}
         characterAnchor={prompt.character_anchor}
         frames={prompt.frames || []}
+        summary={prompt.summary}
         videoUrl={prompt.video_url}
+        history={prompt.history}
       />
+
+      {/* Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirm && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowConfirm(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm bg-white rounded-[2rem] p-8 shadow-2xl border border-slate-100 text-center"
+            >
+              <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-6">
+                <Trash2 size={32} />
+              </div>
+              <h3 className="text-xl font-black text-slate-900 mb-2">Delete Vision?</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-8">
+                This will permanently remove this production blueprint from your library. This action cannot be undone.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setShowConfirm(false)}
+                  className="h-12 rounded-xl bg-slate-50 text-slate-400 font-bold hover:bg-slate-100 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  className="h-12 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 shadow-lg shadow-red-200 transition-all"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
