@@ -145,7 +145,11 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
               }`}
             >
               <span className="flex items-center gap-3"><Layers size={16} /> All Items</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-400">{prompts.length}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${
+                contentType === 'all' && selectedCategory === 'All' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'
+              }`}>
+                {prompts.length}
+              </span>
             </button>
             <button
               onClick={() => { setContentType('image'); setSelectedCategory('All'); }}
@@ -154,7 +158,11 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
               }`}
             >
               <span className="flex items-center gap-3"><Plus size={16} /> Image Prompts</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-400">{prompts.filter(p => p.category !== 'Video').length}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${
+                contentType === 'image' && selectedCategory === 'All' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'
+              }`}>
+                {prompts.filter(p => p.category !== 'Video').length}
+              </span>
             </button>
             <button
               onClick={() => { setContentType('video'); setSelectedCategory('All'); }}
@@ -163,7 +171,11 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
               }`}
             >
               <span className="flex items-center gap-3"><Clapperboard size={16} /> Productions</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-400">{prompts.filter(p => p.category === 'Video').length}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg ${
+                contentType === 'video' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'
+              }`}>
+                {prompts.filter(p => p.category === 'Video').length}
+              </span>
             </button>
           </nav>
 
@@ -202,7 +214,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setIsUploadModalOpen(true)}
-            className="w-full bg-[#11202C] text-white text-[11px] font-black uppercase tracking-widest py-4.5 rounded-2xl hover:bg-[#1a2f3f] transition-all shadow-2xl shadow-[#11202C]/20 flex items-center justify-center gap-2.5 group"
+            className="w-full bg-[#FB8304] text-white text-[11px] font-black uppercase tracking-widest py-4.5 rounded-2xl hover:bg-[#ff8c00] transition-all shadow-2xl shadow-[#FB8304]/20 flex items-center justify-center gap-2.5 group"
            >
              <div className="w-5 h-5 rounded-lg bg-white/10 flex items-center justify-center group-hover:rotate-90 transition-transform">
                <Plus size={14} />
@@ -223,7 +235,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
               </div>
               <h2 className="text-5xl font-black text-[#11202C] tracking-tight mb-2">
                 {contentType === 'all' ? 'All Items' : contentType === 'image' ? (selectedCategory === 'All' ? 'Image Prompts' : selectedCategory) : 'Video Productions'} 
-                <span className="text-slate-200 italic font-light"> Archive</span>
+                <span className="text-slate-100 italic font-light"> Archive</span>
               </h2>
               <p className="text-slate-400 font-medium">Found {filteredAndSortedPrompts.length} premium entries in your library.</p>
             </div>
@@ -238,7 +250,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             </div>
           </header>
 
-          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-7 space-y-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
             <AnimatePresence mode="popLayout">
               {filteredAndSortedPrompts.map((prompt, idx) => (
                 <motion.div
@@ -248,7 +260,6 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.4, delay: idx * 0.05 }}
-                  className="break-inside-avoid"
                 >
                   <PromptCard 
                     prompt={prompt} 

@@ -181,7 +181,7 @@ export const PromptCard: React.FC<{
             href={prompt.video_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-11 px-4 rounded-xl bg-[#2EABDF]/10 border border-[#2EABDF]/20 text-[#2EABDF] hover:bg-[#2EABDF]/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
+            className="h-11 px-4 rounded-xl bg-[#11202C]/10 border border-[#11202C]/20 text-[#11202C] hover:bg-[#11202C]/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
             title="Watch Video"
           >
             <ExternalLink size={16} />
