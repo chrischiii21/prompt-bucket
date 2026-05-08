@@ -69,10 +69,10 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
             <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
               <div>
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
+                  <div className="w-8 h-8 rounded-lg bg-[#11202C] flex items-center justify-center text-white shadow-lg shadow-[#11202C]/10">
                     <Clapperboard size={18} />
                   </div>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">{projectName}</h2>
+                  <h2 className="text-2xl font-black text-[#11202C] tracking-tight">{projectName}</h2>
                 </div>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Production Blueprint • {frames.length} Scenes</p>
               </div>
@@ -83,7 +83,7 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                     href={videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-indigo-100 transition-all"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#2EABDF]/10 text-[#2EABDF] rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#2EABDF]/20 transition-all shadow-sm"
                   >
                     <ExternalLink size={14} /> Watch Final
                   </a>
@@ -98,7 +98,7 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                         setCurrentVersion({ characterAnchor, frames, summary });
                       }}
                       className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                        versionIdx === -1 ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                        versionIdx === -1 ? 'bg-[#11202C] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'
                       }`}
                     >
                       Latest
@@ -115,7 +115,7 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                           });
                         }}
                         className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                          versionIdx === idx ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                          versionIdx === idx ? 'bg-[#2EABDF] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'
                         }`}
                       >
                         V{idx + 1}
@@ -141,11 +141,11 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                   {currentVersion.summary && (
                     <section className="space-y-6">
                       <div className="flex items-center gap-3">
-                        <div className="h-px w-8 bg-indigo-600"></div>
-                        <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Story Narrative Synthesis</h3>
+                        <div className="h-px w-8 bg-[#2EABDF]"></div>
+                        <h3 className="text-[10px] font-black text-[#2EABDF] uppercase tracking-[0.3em]">Story Narrative Synthesis</h3>
                       </div>
-                      <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-8 text-indigo-500/5">
+                      <div className="p-8 bg-[#FBFBFB] rounded-[2.5rem] border border-slate-100 relative overflow-hidden shadow-sm">
+                        <div className="absolute top-0 right-0 p-8 text-[#2EABDF]/5">
                           <Sparkles size={100} />
                         </div>
                         <p className="text-base text-slate-800 leading-relaxed font-medium italic relative z-10">
@@ -158,19 +158,19 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                   {/* Character Anchor Section */}
                   <section className="space-y-6">
                     <div className="flex items-center gap-3">
-                      <div className="h-px w-8 bg-indigo-600"></div>
-                      <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Character Identity Anchor</h3>
+                      <div className="h-px w-8 bg-[#FB8304]"></div>
+                      <h3 className="text-[10px] font-black text-[#FB8304] uppercase tracking-[0.3em]">Character Identity Anchor</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Core Description</h4>
-                        <p className="text-sm font-bold text-slate-900 leading-relaxed italic border-l-2 border-indigo-100 pl-4 py-1">
+                        <p className="text-sm font-bold text-[#11202C] leading-relaxed italic border-l-2 border-[#FB8304]/20 pl-4 py-1">
                           "{currentVersion.characterAnchor?.description || 'Standard Cinematic'}"
                         </p>
                       </div>
-                      <div className="p-8 bg-slate-900 rounded-[2rem] shadow-xl text-indigo-100/80">
-                        <h4 className="text-[10px] font-black text-indigo-400/50 uppercase tracking-widest mb-4">Stable Prompt Seed</h4>
-                        <p className="text-xs font-mono font-bold leading-relaxed">
+                      <div className="p-8 bg-[#11202C] rounded-[2rem] shadow-xl text-[#2EABDF]/80">
+                        <h4 className="text-[10px] font-black text-[#2EABDF]/40 uppercase tracking-widest mb-4">Stable Prompt Seed</h4>
+                        <p className="text-xs font-mono font-bold leading-relaxed text-white">
                           {currentVersion.characterAnchor?.seed_prompt || 'Standard Cinematic Seed'}
                         </p>
                       </div>
@@ -180,8 +180,8 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                   {/* Scene Timeline Section */}
                   <section className="space-y-6 pb-12">
                     <div className="flex items-center gap-3 mb-8">
-                      <div className="h-px w-8 bg-indigo-600"></div>
-                      <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.3em]">Production Scene Timeline</h3>
+                      <div className="h-px w-8 bg-[#11202C]"></div>
+                      <h3 className="text-[10px] font-black text-[#11202C] uppercase tracking-[0.3em]">Production Scene Timeline</h3>
                     </div>
                     
                     <div className="grid grid-cols-1 gap-4">
@@ -196,26 +196,26 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="group p-6 bg-white border border-slate-100 rounded-3xl hover:border-indigo-200 hover:shadow-xl hover:shadow-indigo-500/5 transition-all flex gap-6 items-start"
+                            className="group p-6 bg-white border border-slate-100 rounded-3xl hover:border-[#2EABDF]/30 hover:shadow-xl hover:shadow-[#2EABDF]/5 transition-all flex gap-6 items-start"
                           >
                             <div className="w-16 flex flex-col items-center gap-2 pt-2">
-                              <span className="text-[10px] font-black text-indigo-600 uppercase tracking-widest">{timestamp}s</span>
-                              <div className="w-px h-12 bg-indigo-50" />
-                              <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 text-[10px] font-black">
+                              <span className="text-[10px] font-black text-[#2EABDF] uppercase tracking-widest">{timestamp}s</span>
+                              <div className="w-px h-12 bg-slate-100" />
+                              <div className="w-8 h-8 rounded-full bg-[#11202C] flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-[#11202C]/20">
                                 {index + 1}
                               </div>
                             </div>
 
                             <div className="flex-1 space-y-4">
                               <div className="flex items-center gap-3">
-                                <span className="px-3 py-1 rounded-lg bg-indigo-50 text-[9px] font-black text-indigo-600 uppercase tracking-widest">
+                                <span className="px-3 py-1 rounded-lg bg-[#2EABDF]/5 text-[9px] font-black text-[#2EABDF] uppercase tracking-widest">
                                   {frame.shot_type}
                                 </span>
                                 <span className="flex items-center gap-1.5 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
                                   <Clock size={12} /> {frame.duration}
                                 </span>
                               </div>
-                              <p className="text-sm font-bold text-slate-900 leading-relaxed pr-12">
+                              <p className="text-sm font-bold text-[#11202C] leading-relaxed pr-12">
                                 {frame.final_prompt}
                               </p>
                             </div>
@@ -225,7 +225,7 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                               className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
                                 copiedIndex === index 
                                   ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' 
-                                  : 'bg-slate-50 text-slate-400 hover:bg-slate-900 hover:text-white'
+                                  : 'bg-slate-50 text-slate-400 hover:bg-[#11202C] hover:text-white'
                               }`}
                             >
                               {copiedIndex === index ? <Check size={20} /> : <Copy size={20} />}

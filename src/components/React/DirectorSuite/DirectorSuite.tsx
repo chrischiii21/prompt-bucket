@@ -344,14 +344,14 @@ export const DirectorSuite: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-slate-900 p-4 md:p-8 font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#FBFBFB] text-[#11202C] p-4 md:p-8 font-sans overflow-x-hidden">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         {error && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600 text-sm flex items-center gap-3"
+            className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl text-[#E22A1D] text-sm flex items-center gap-3"
           >
             <span className="font-bold">Error:</span> {error}
             <button onClick={() => setError(null)} className="ml-auto hover:text-red-800">✕</button>
@@ -359,19 +359,19 @@ export const DirectorSuite: React.FC = () => {
         )}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-16 gap-6 relative">
           <div className="flex items-center gap-4">
-             <a href="/" className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-900 hover:border-slate-300 transition-all">
+             <a href="/" className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-400 hover:text-[#11202C] hover:border-slate-300 transition-all">
                 <ArrowRight className="rotate-180" size={18} />
              </a>
              <div>
                 <motion.h1 
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-4xl md:text-5xl font-black tracking-tight text-slate-900"
+                  className="text-4xl md:text-5xl font-black tracking-tight text-[#11202C]"
                 >
-                  Director's <span className="text-indigo-600 italic font-light">Suite</span>
+                  Director's <span className="text-[#2EABDF] italic font-light">Suite</span>
                 </motion.h1>
                 <div className="flex items-center gap-2 mt-2">
-                   <div className="h-0.5 w-8 bg-indigo-600"></div>
+                   <div className="h-0.5 w-8 bg-[#FB8304]"></div>
                    <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">AI Video Blueprint Creator</p>
                 </div>
              </div>
@@ -390,7 +390,7 @@ export const DirectorSuite: React.FC = () => {
               <button 
                 onClick={handleApprove}
                 disabled={isSaving}
-                className="px-6 py-3 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 flex items-center gap-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
+                className="px-6 py-3 rounded-2xl bg-[#11202C] text-white hover:bg-[#1a2f3f] transition-all shadow-xl shadow-[#11202C]/10 flex items-center gap-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
               >
                 {isSaving ? <RefreshCw size={16} className="animate-spin" /> : <Save size={16} />}
                 Approve & Save Vision
@@ -403,13 +403,13 @@ export const DirectorSuite: React.FC = () => {
                 </div>
                 <a 
                   href="/"
-                  className="px-6 py-3 rounded-2xl bg-slate-900 text-white hover:bg-slate-800 transition-all shadow-xl shadow-slate-900/10 flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
+                  className="px-6 py-3 rounded-2xl bg-[#11202C] text-white hover:bg-[#1a2f3f] transition-all shadow-xl shadow-[#11202C]/10 flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
                 >
                   <Layers size={14} /> Go to Library
                 </a>
                 <button 
                   onClick={() => setStep('refining')}
-                  className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2"
+                  className="px-5 py-3 rounded-2xl bg-white border border-slate-200 text-slate-500 hover:text-[#11202C] hover:border-slate-300 transition-all text-xs font-bold uppercase tracking-widest flex items-center gap-2"
                 >
                   <RefreshCw size={14} /> Refine Further
                 </button>
@@ -442,21 +442,21 @@ export const DirectorSuite: React.FC = () => {
                 {/* Character Anchor Sidebar */}
                 <aside className="lg:col-span-1">
                   <div className="sticky top-8 bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl -mr-16 -mt-16 rounded-full" />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#2EABDF]/5 blur-3xl -mr-16 -mt-16 rounded-full" />
                     
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">
-                        <div className="h-px w-6 bg-indigo-600"></div>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-600">Character Anchor</span>
+                        <div className="h-px w-6 bg-[#2EABDF]"></div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#2EABDF]">Character Anchor</span>
                       </div>
                     </div>
                     
-                    <h3 className="text-xl font-black text-slate-900 mb-3 tracking-tight">The Protagonist</h3>
+                    <h3 className="text-xl font-black text-[#11202C] mb-3 tracking-tight">The Protagonist</h3>
 
                     {/* Read-only Description */}
                     <div className="mb-5">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Description</label>
-                      <div className="border-l-2 border-indigo-100 pl-4 py-1">
+                      <div className="border-l-2 border-[#2EABDF]/20 pl-4 py-1">
                         <p className="text-[11px] font-bold text-slate-800 leading-relaxed italic">
                           "{projectData.character_anchor?.description || 'Generic Production Style'}"
                         </p>
@@ -466,8 +466,8 @@ export const DirectorSuite: React.FC = () => {
                     {/* Read-only Seed Prompt */}
                     <div className="mb-6">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Seed Prompt</label>
-                      <div className="p-4 bg-slate-900 rounded-xl border border-slate-800">
-                        <p className="text-[10px] text-indigo-200 font-mono break-words leading-relaxed">
+                      <div className="p-4 bg-[#11202C] rounded-xl border border-slate-800">
+                        <p className="text-[10px] text-[#2EABDF]/80 font-mono break-words leading-relaxed">
                           {projectData.character_anchor?.seed_prompt || 'Standard Cinematic Seed'}
                         </p>
                       </div>
@@ -479,8 +479,8 @@ export const DirectorSuite: React.FC = () => {
                       <div className="relative">
                         <input 
                           type="text"
-                          placeholder="e.g. 'add red glasses', 'futuristic outfit', 'slow confident walk'..."
-                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 pr-12 text-[11px] text-slate-900 focus:outline-none focus:border-indigo-500 transition-all font-bold"
+                          placeholder="e.g. 'add red glasses', 'futuristic outfit'..."
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 pr-12 text-[11px] text-[#11202C] focus:outline-none focus:border-[#FB8304] transition-all font-bold"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               handleRefineCharacter(e.currentTarget.value);
@@ -495,7 +495,7 @@ export const DirectorSuite: React.FC = () => {
                             handleRefineCharacter(input.value);
                             input.value = '';
                           }}
-                          className="absolute right-2 top-2 w-8 h-8 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-all disabled:opacity-50 flex items-center justify-center"
+                          className="absolute right-2 top-2 w-8 h-8 bg-[#11202C] text-white rounded-lg hover:bg-[#1a2f3f] transition-all disabled:opacity-50 flex items-center justify-center"
                         >
                           {isRefiningCharacter ? <RefreshCw size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                         </button>
@@ -526,12 +526,12 @@ export const DirectorSuite: React.FC = () => {
                             value={videoUrl}
                             onChange={(e) => setVideoUrl(e.target.value)}
                             placeholder="Paste video URL (YouTube, Vimeo, etc.)"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-900 focus:outline-none focus:border-indigo-500/50 transition-all font-medium"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-[#11202C] focus:outline-none focus:border-[#2EABDF]/50 transition-all font-medium"
                           />
                           <button 
                             onClick={handleSaveVideoLink}
                             disabled={isSavingUrl || !videoUrl.trim()}
-                            className="w-full py-3 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-slate-800 transition-all disabled:opacity-50"
+                            className="w-full py-3 bg-[#11202C] text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1a2f3f] transition-all disabled:opacity-50"
                           >
                             {isSavingUrl ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                             Save Link
@@ -550,7 +550,7 @@ export const DirectorSuite: React.FC = () => {
                       <button 
                         onClick={() => handleSwitchVersion(-1)}
                         className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                          currentVersionIndex === -1 ? 'bg-slate-900 text-white shadow-lg shadow-slate-200' : 'text-slate-400 hover:text-slate-600'
+                          currentVersionIndex === -1 ? 'bg-[#11202C] text-white shadow-lg shadow-[#11202C]/10' : 'text-slate-400 hover:text-slate-600'
                         }`}
                       >
                         Working Draft
@@ -560,7 +560,7 @@ export const DirectorSuite: React.FC = () => {
                           key={idx}
                           onClick={() => handleSwitchVersion(idx)}
                           className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            currentVersionIndex === idx ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-100' : 'text-slate-400 hover:text-slate-600'
+                            currentVersionIndex === idx ? 'bg-[#2EABDF] text-white shadow-lg shadow-[#2EABDF]/20' : 'text-slate-400 hover:text-slate-600'
                           }`}
                         >
                           V{idx + 1}
@@ -571,19 +571,19 @@ export const DirectorSuite: React.FC = () => {
 
                   {/* Story Summary Card */}
                 <div className="mb-12 p-10 bg-white rounded-[3rem] border border-slate-100 relative overflow-hidden group shadow-sm">
-                  <div className="absolute top-0 right-0 p-10 text-slate-50 group-hover:text-indigo-500/5 transition-colors pointer-events-none">
+                  <div className="absolute top-0 right-0 p-10 text-slate-50 group-hover:text-[#2EABDF]/5 transition-colors pointer-events-none">
                     <Sparkles size={140} />
                   </div>
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="h-px w-8 bg-indigo-600"></div>
-                        <h3 className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em]">Director's Narrative Summary</h3>
+                        <div className="h-px w-8 bg-[#2EABDF]"></div>
+                        <h3 className="text-[10px] font-black text-[#2EABDF] uppercase tracking-[0.2em]">Director's Narrative Summary</h3>
                       </div>
                       {!projectData.summary && (
                         <button 
                           onClick={() => {/* Trigger AI synthesis logic */}}
-                          className="flex items-center gap-2 text-[9px] font-black text-indigo-400 hover:text-indigo-600 uppercase tracking-widest transition-colors"
+                          className="flex items-center gap-2 text-[9px] font-black text-[#2EABDF]/60 hover:text-[#2EABDF] uppercase tracking-widest transition-colors"
                         >
                           <RefreshCw size={12} /> Auto-Synthesize Story
                         </button>
@@ -622,8 +622,8 @@ export const DirectorSuite: React.FC = () => {
 
       {/* Background Decor */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-100/50 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100/30 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#FB8304]/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#2EABDF]/10 blur-[120px] rounded-full" />
       </div>
 
       {/* Global Loading Overlay */}
@@ -633,13 +633,13 @@ export const DirectorSuite: React.FC = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center text-white"
+            className="fixed inset-0 bg-[#11202C]/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center text-white"
           >
-            <div className="w-24 h-24 rounded-[2rem] bg-indigo-600 flex items-center justify-center shadow-2xl shadow-indigo-500/40 mb-8 animate-bounce">
+            <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-[#FB8304] to-[#E22A1D] flex items-center justify-center shadow-2xl shadow-orange-500/40 mb-8 animate-bounce">
               <Sparkles size={48} className="animate-pulse" />
             </div>
             <h3 className="text-2xl font-black mb-2 uppercase tracking-widest">Architecting Vision</h3>
-            <p className="text-indigo-200 text-xs font-bold uppercase tracking-[0.3em]">Building your production blueprint...</p>
+            <p className="text-orange-200 text-xs font-bold uppercase tracking-[0.3em]">Building your production blueprint...</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -656,7 +656,7 @@ export const DirectorSuite: React.FC = () => {
             <div className={`px-6 py-4 rounded-2xl shadow-2xl backdrop-blur-md border ${
               toast.type === 'success' 
                 ? 'bg-emerald-500/90 text-white border-emerald-400' 
-                : 'bg-red-500/90 text-white border-red-400'
+                : 'bg-[#E22A1D]/90 text-white border-red-400'
             } flex items-center gap-3 min-w-[280px]`}>
               <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                 {toast.type === 'success' ? <CheckCircle size={18} /> : <X size={18} />}

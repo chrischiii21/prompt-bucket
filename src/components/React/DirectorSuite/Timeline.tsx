@@ -15,8 +15,8 @@ export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, cur
   return (
     <div className="relative pl-10 md:pl-16">
       {/* The Timeline Rail */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-50 rounded-full" />
-      <div className="absolute left-0 top-0 h-1/2 w-1 bg-indigo-600 rounded-full" />
+      <div className="absolute left-0 top-0 bottom-8 w-1 bg-slate-100 rounded-full" />
+      <div className="absolute left-0 top-0 bottom-8 w-1 bg-[#2EABDF] rounded-full shadow-[0_0_10px_rgba(46,171,223,0.2)]" />
       
       <div className="space-y-16">
         {frames.map((frame, index) => (
@@ -28,7 +28,7 @@ export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, cur
             className="relative"
           >
             {/* Timeline Node */}
-            <div className="absolute -left-[45px] md:-left-[69px] top-8 w-4 h-4 rounded-full bg-white border-4 border-indigo-600 z-10 shadow-lg shadow-indigo-200" />
+            <div className="absolute -left-[45px] md:-left-[69px] top-8 w-4 h-4 rounded-full bg-white border-4 border-[#11202C] z-10 shadow-lg shadow-[#11202C]/10" />
 
             <FrameCard 
               frame={frame} 

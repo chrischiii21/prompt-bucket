@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Copy, Check, Play, ExternalLink, BookOpen, RefreshCw, Trash2 } from 'lucide-react';
+import { Copy, Check, Play, ExternalLink, BookOpen, RefreshCw, Trash2, Maximize2 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProductionBlueprintModal } from './ProductionBlueprintModal';
+import { PromptDetailModal } from './PromptDetailModal';
 
 interface Prompt {
   id: string;
@@ -22,9 +23,11 @@ interface Prompt {
 export const PromptCard: React.FC<{ 
   prompt: Prompt;
   onDeleted?: () => void;
-}> = ({ prompt, onDeleted }) => {
+  showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
+}> = ({ prompt, onDeleted, showToast }) => {
   const [copied, setCopied] = useState(false);
   const [isBlueprintOpen, setIsBlueprintOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -57,7 +60,11 @@ export const PromptCard: React.FC<{
       if (onDeleted) onDeleted();
     } catch (err: any) {
       console.error('Failed to delete:', err);
-      alert(`Could not delete production: ${err.message || 'Access Denied'}`);
+      if (showToast) {
+        showToast(`Could not delete item: ${err.message || 'Access Denied'}`, 'error');
+      } else {
+        alert(`Could not delete item: ${err.message || 'Access Denied'}`);
+      }
     } finally {
       setIsDeleting(false);
     }
@@ -80,6 +87,8 @@ export const PromptCard: React.FC<{
     }
   };
 
+  const isVideo = prompt.category === 'Video';
+
   return (
     <motion.div 
       layout
@@ -95,15 +104,15 @@ export const PromptCard: React.FC<{
             loading="lazy"
           />
           <div className="absolute top-3 left-3">
-             <span className="bg-slate-900/90 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg shadow-xl flex items-center gap-1.5">
-               {prompt.category === 'Video' && <Play size={10} className="fill-current" />}
+             <span className="bg-[#11202C]/90 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg shadow-xl flex items-center gap-1.5 border border-white/10">
+               {isVideo && <Play size={10} className="fill-[#FB8304] text-[#FB8304]" />}
                {prompt.category}
              </span>
           </div>
-          {prompt.category === 'Video' && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10 group-hover:bg-black/0 transition-all">
+          {isVideo && (
+            <div className="absolute inset-0 flex items-center justify-center bg-[#11202C]/10 group-hover:bg-black/0 transition-all">
               <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-2xl">
-                <Play size={24} className="fill-current ml-1" />
+                <Play size={24} className="fill-[#FB8304] text-[#FB8304] ml-1" />
               </div>
             </div>
           )}
@@ -113,79 +122,58 @@ export const PromptCard: React.FC<{
       {/* Content Area */}
       <div className="px-5 pb-5 flex-1 flex flex-col">
         <div className="flex items-center gap-2 mb-3">
-          <div className="h-px w-5 bg-slate-200"></div>
-          <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">Prompter</span>
+          <div className="h-px w-5 bg-gradient-to-r from-[#FB8304] to-[#E22A1D]"></div>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FB8304]">Prompter</span>
         </div>
         
-        <p className="text-xs text-slate-600 leading-relaxed line-clamp-3 mb-6 font-medium">
+        <p className="text-xs text-slate-600 leading-relaxed line-clamp-3 mb-6 font-bold">
           {prompt.prompt_text}
         </p>
 
         <div className="mt-auto pt-5 border-t border-slate-50 flex items-center justify-between">
            <div className="flex items-center gap-2.5">
-             <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold">
+             <div className="w-7 h-7 rounded-lg bg-[#11202C] text-white flex items-center justify-center text-[10px] font-black">
                P
              </div>
-             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Library AI</span>
+             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Library AI</span>
            </div>
-           <span className="text-[10px] font-bold text-slate-300">
+           <span className="text-[10px] font-black text-[#FB8304]/40">
              {new Date(prompt.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
            </span>
         </div>
       </div>
 
-      {/* Action Bar */}
       <div className="px-4 pb-4 mt-auto flex gap-2">
-        {prompt.category === 'Video' ? (
-          <button 
-            onClick={() => setIsBlueprintOpen(true)}
-            className="flex-1 h-11 rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
-          >
-            <BookOpen size={16} />
-            <span className="text-[11px] font-bold uppercase tracking-widest">Blueprint</span>
-          </button>
-        ) : (
+        <button 
+          onClick={() => isVideo ? setIsBlueprintOpen(true) : setIsDetailOpen(true)}
+          className="flex-1 h-11 rounded-xl bg-[#11202C] text-white hover:bg-[#1a2f3f] transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
+        >
+          {isVideo ? <BookOpen size={16} /> : <Maximize2 size={16} />}
+          <span className="text-[11px] font-black uppercase tracking-widest">{isVideo ? 'Blueprint' : 'Expand'}</span>
+        </button>
+
+        {!isVideo && (
           <button 
             onClick={copyToClipboard}
-            className={`flex-1 h-11 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] border shadow-sm ${
+            className={`h-11 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] border shadow-sm ${
               copied 
-                ? 'bg-green-50 border-green-200 text-green-600' 
-                : 'bg-slate-900 text-white hover:bg-slate-800'
+                ? 'bg-[#FB8304]/10 border-[#FB8304]/20 text-[#FB8304]' 
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
+            title="Copy Prompt"
           >
-            {copied ? (
-              <>
-                <Check size={16} />
-                <span className="text-[11px] font-bold uppercase tracking-widest">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy size={16} />
-                <span className="text-[11px] font-bold uppercase tracking-widest">Copy</span>
-              </>
-            )}
+            {copied ? <Check size={16} /> : <Copy size={16} />}
           </button>
         )}
 
-        {prompt.category === 'Video' && (
-          <div className="flex gap-2">
-            <a 
-              href={`/director?refine=${prompt.id}`}
-              className="h-11 px-4 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-indigo-200"
-              title="Refine in Director Suite"
-            >
-              <RefreshCw size={16} />
-              <span className="text-[11px] font-bold uppercase tracking-widest">Refine</span>
-            </a>
-            <button 
-              onClick={handleDeleteClick}
-              disabled={isDeleting}
-              className="w-11 h-11 rounded-xl bg-red-50 border border-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center active:scale-95 shadow-sm"
-              title="Delete Production"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
+        {isVideo && (
+          <a 
+            href={`/director?refine=${prompt.id}`}
+            className="h-11 px-4 rounded-xl bg-gradient-to-r from-[#FB8304] to-[#E22A1D] text-white hover:opacity-90 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-[#FB8304]/20"
+            title="Refine in Director Suite"
+          >
+            <RefreshCw size={16} />
+          </a>
         )}
 
         {prompt.video_url && (
@@ -193,24 +181,41 @@ export const PromptCard: React.FC<{
             href={prompt.video_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="h-11 px-4 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
+            className="h-11 px-4 rounded-xl bg-[#2EABDF]/10 border border-[#2EABDF]/20 text-[#2EABDF] hover:bg-[#2EABDF]/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
+            title="Watch Video"
           >
             <ExternalLink size={16} />
-            <span className="text-[11px] font-bold uppercase tracking-widest">Watch</span>
           </a>
         )}
+
+        <button 
+          onClick={handleDeleteClick}
+          disabled={isDeleting}
+          className="w-11 h-11 rounded-xl bg-red-50 border border-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center active:scale-95 shadow-sm"
+          title="Delete Item"
+        >
+          <Trash2 size={16} />
+        </button>
       </div>
 
-      <ProductionBlueprintModal 
-        isOpen={isBlueprintOpen}
-        onClose={() => setIsBlueprintOpen(false)}
-        projectName={prompt.prompt_text.split('\n\n')[0].replace('Concept: ', '')}
-        characterAnchor={prompt.character_anchor}
-        frames={prompt.frames || []}
-        summary={prompt.summary}
-        videoUrl={prompt.video_url}
-        history={prompt.history}
-      />
+      {isVideo ? (
+        <ProductionBlueprintModal 
+          isOpen={isBlueprintOpen}
+          onClose={() => setIsBlueprintOpen(false)}
+          projectName={prompt.prompt_text.split('\n\n')[0].replace('Concept: ', '')}
+          characterAnchor={prompt.character_anchor}
+          frames={prompt.frames || []}
+          summary={prompt.summary}
+          videoUrl={prompt.video_url}
+          history={prompt.history}
+        />
+      ) : (
+        <PromptDetailModal 
+          isOpen={isDetailOpen}
+          onClose={() => setIsDetailOpen(false)}
+          prompt={prompt}
+        />
+      )}
 
       {/* Confirmation Modal */}
       <AnimatePresence>
@@ -232,9 +237,9 @@ export const PromptCard: React.FC<{
               <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-6">
                 <Trash2 size={32} />
               </div>
-              <h3 className="text-xl font-black text-slate-900 mb-2">Delete Vision?</h3>
+              <h3 className="text-xl font-black text-slate-900 mb-2">Delete Item?</h3>
               <p className="text-sm text-slate-500 leading-relaxed mb-8">
-                This will permanently remove this production blueprint from your library. This action cannot be undone.
+                This will permanently remove this {isVideo ? 'production' : 'prompt'} from your library. This action cannot be undone.
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <button 
@@ -257,3 +262,4 @@ export const PromptCard: React.FC<{
     </motion.div>
   );
 };
+

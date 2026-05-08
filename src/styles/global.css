@@ -1,13 +1,14 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand-primary: #7c3aed;
-  --color-brand-secondary: #db2777;
-  --color-brand-accent: #0ea5e9;
+  --color-brand-primary: #11202C;
+  --color-brand-secondary: #FB8304;
+  --color-brand-accent: #2EABDF;
+  --color-brand-red: #E22A1D;
   
-  --color-border: #e2e8f0;
-  --color-background: #ffffff;
-  --color-foreground: #0f172a;
+  --color-border: #f1f5f9;
+  --color-background: #FBFBFB;
+  --color-foreground: #11202C;
   
   --font-sans: 'Outfit', 'Inter', sans-serif;
 }
@@ -17,29 +18,29 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground selection:bg-brand-primary/10 antialiased overflow-x-hidden;
+    @apply bg-background text-foreground selection:bg-brand-secondary/10 antialiased overflow-x-hidden;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
 .mesh-gradient {
-  background-color: #ffffff;
+  background-color: #FBFBFB;
   background-image: 
-    radial-gradient(at 0% 0%, hsla(253,100%,98%,1) 0, transparent 50%), 
-    radial-gradient(at 50% 0%, hsla(225,100%,96%,1) 0, transparent 50%), 
-    radial-gradient(at 100% 0%, hsla(339,100%,97%,1) 0, transparent 50%);
+    radial-gradient(at 0% 0%, hsla(208,100%,98%,1) 0, transparent 50%), 
+    radial-gradient(at 50% 0%, hsla(30,100%,98%,1) 0, transparent 50%), 
+    radial-gradient(at 100% 0%, hsla(208,100%,97%,1) 0, transparent 50%);
 }
 
 .glass {
-  @apply bg-white/70 backdrop-blur-2xl border border-black/5;
+  @apply bg-white/70 backdrop-blur-2xl border border-[#11202C]/5;
 }
 
 .glass-card {
-  @apply bg-white/50 backdrop-blur-xl border border-black/5 hover:border-brand-primary/30 hover:shadow-2xl hover:shadow-black/5 transition-all duration-500;
+  @apply bg-white/50 backdrop-blur-xl border border-[#11202C]/5 hover:border-[#2EABDF]/30 hover:shadow-2xl hover:shadow-[#11202C]/5 transition-all duration-500;
 }
 
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-br from-slate-900 via-slate-800 to-brand-primary;
+  @apply bg-clip-text text-transparent bg-gradient-to-br from-[#11202C] via-[#11202C]/80 to-[#FB8304];
 }
 
 .btn-primary {
@@ -59,11 +60,11 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-black;
+  @apply bg-[#FBFBFB];
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-white/10 rounded-full border-4 border-black hover:bg-white/20 transition-colors;
+  @apply bg-[#11202C]/10 rounded-full border-4 border-[#FBFBFB] hover:bg-[#2EABDF]/20 transition-colors;
 }
 
 /* Masonry Grid (handled by Tailwind columns-x) */
