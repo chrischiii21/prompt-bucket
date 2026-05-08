@@ -122,14 +122,14 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
         <div className="mb-10">
           <a 
             href="/director"
-            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-[#2EABDF]/5 border border-[#2EABDF]/10 text-[#2EABDF] hover:bg-[#2EABDF]/10 transition-all group"
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-[#11202C]/5 border border-[#11202C]/10 text-[#11202C] hover:bg-[#11202C]/10 transition-all group"
           >
-            <div className="w-8 h-8 rounded-lg bg-[#2EABDF] text-white flex items-center justify-center shadow-lg shadow-[#2EABDF]/20 group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-[#FB8304] text-white flex items-center justify-center shadow-lg shadow-[#FB8304]/20 group-hover:scale-110 transition-transform">
               <Clapperboard size={18} />
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-black uppercase tracking-widest leading-none">Director's Suite</span>
-              <span className="text-[9px] font-bold opacity-60 mt-1">AI Video Blueprint Creator</span>
+              <span className="text-[9px] font-bold opacity-60 mt-1 text-[#FB8304]">AI Video Blueprint Creator</span>
             </div>
           </a>
         </div>

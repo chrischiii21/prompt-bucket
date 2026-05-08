@@ -55,7 +55,7 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
       <div className="bg-white border border-slate-200 rounded-[2rem] p-6 md:p-8 relative overflow-hidden shadow-2xl shadow-slate-200/50">
         <div className="flex items-center justify-between mb-6 border-b border-slate-100 pb-6">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-[#2EABDF]/5 flex items-center justify-center text-[#2EABDF] border border-[#2EABDF]/10 shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-[#FB8304]/5 flex items-center justify-center text-[#FB8304] border border-[#FB8304]/10 shadow-sm">
               <Clapperboard size={20} />
             </div>
             <div>
@@ -96,11 +96,11 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
                       }`}
                     >
                       <div>
-                        <p className={`text-[11px] font-black uppercase tracking-[0.1em] ${productionType === type.id ? 'text-[#2EABDF]' : ''}`}>
+                        <p className={`text-[11px] font-black uppercase tracking-[0.1em] ${productionType === type.id ? 'text-[#FB8304]' : ''}`}>
                           {type.label}
                         </p>
                       </div>
-                      {productionType === type.id && <Check size={14} className="text-[#2EABDF]" />}
+                      {productionType === type.id && <Check size={14} className="text-[#FB8304]" />}
                     </button>
                   ))}
                 </div>
@@ -181,8 +181,8 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
               {/* 3. Timeline Mode */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-4 ml-1">
-                  <div className="h-px w-6 bg-[#2EABDF]"></div>
-                  <label className="block text-[10px] font-black text-[#2EABDF] uppercase tracking-[0.2em]">3. Duration</label>
+                  <div className="h-px w-6 bg-[#FB8304]"></div>
+                  <label className="block text-[10px] font-black text-[#FB8304] uppercase tracking-[0.2em]">3. Duration</label>
                 </div>
                 <div className="flex bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                   {['preset', 'custom', 'flexible'].map((m) => (
@@ -209,7 +209,7 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
                           onClick={() => setDuration(s)} 
                           className={`w-14 h-10 rounded-xl text-[11px] font-black border transition-all ${
                             duration === s 
-                              ? 'bg-[#2EABDF] text-white border-[#2EABDF] shadow-lg shadow-[#2EABDF]/20 scale-105' 
+                              ? 'bg-[#FB8304] text-white border-[#FB8304] shadow-lg shadow-[#FB8304]/20 scale-105' 
                               : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'
                           }`}
                         >
@@ -224,13 +224,13 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
                         type="number" 
                         value={duration} 
                         onChange={(e) => setDuration(parseInt(e.target.value) || 5)} 
-                        className="w-20 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-[#11202C] focus:outline-none focus:border-[#2EABDF]/50" 
+                        className="w-20 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs font-black text-[#11202C] focus:outline-none focus:border-[#FB8304]/50" 
                       />
                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Seconds</span>
                     </div>
                   )}
                   {durationMode === 'flexible' && (
-                    <div className="flex items-center gap-2.5 text-[#2EABDF] text-[11px] font-black uppercase tracking-widest">
+                    <div className="flex items-center gap-2.5 text-[#FB8304] text-[11px] font-black uppercase tracking-widest">
                       <Sparkles size={14} className="animate-pulse" /> AI Decides
                     </div>
                   )}

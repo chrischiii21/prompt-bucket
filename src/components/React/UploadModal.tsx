@@ -173,7 +173,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-5xl bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-auto md:min-h-[600px]"
+              className="relative w-full max-w-4xl bg-white rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col md:flex-row max-h-[90vh] md:h-auto"
             >
               {/* Close button */}
               <button onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 transition-colors text-slate-400 z-50">
@@ -181,8 +181,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
               </button>
 
               {/* Left Side: Media Upload */}
-              <div className="w-full md:w-5/12 bg-[#FBFBFB] p-8 border-r border-slate-100 flex flex-col">
-                <div className="mb-8">
+              <div className="w-full md:w-5/12 bg-[#FBFBFB] p-6 border-r border-slate-100 flex flex-col">
+                <div className="mb-5">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-xl bg-[#11202C] text-white flex items-center justify-center shadow-lg shadow-[#11202C]/10">
                       <Plus size={18} />
@@ -235,8 +235,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
               </div>
 
               {/* Right Side: Dynamic Form */}
-              <div className="flex-1 p-8 md:p-12 bg-white flex flex-col overflow-y-auto custom-scrollbar">
-                <div className="flex bg-slate-50 p-1.5 rounded-2xl mb-10 w-fit border border-slate-100">
+              <div className="flex-1 p-8 bg-white flex flex-col overflow-y-auto custom-scrollbar">
+                <div className="flex bg-slate-50 p-1.5 rounded-2xl mb-6 w-fit border border-slate-100">
                   <button
                     onClick={() => setType('Video')}
                     className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
@@ -255,7 +255,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                   </button>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-8 flex-1 flex flex-col">
+                <form onSubmit={handleSubmit} className="space-y-5 flex-1 flex flex-col">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Category</label>
@@ -289,7 +289,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                           placeholder="Paste the prompt that generated this image..."
                           value={formData.prompt_text}
                           onChange={(e) => setFormData({ ...formData, prompt_text: e.target.value })}
-                          className="w-full h-48 p-5 rounded-[2rem] bg-slate-50 border border-slate-100 focus:bg-white transition-all outline-none text-sm text-slate-900 resize-none font-medium leading-relaxed"
+                          className="w-full h-40 p-5 rounded-[2rem] bg-slate-50 border border-slate-100 focus:bg-white transition-all outline-none text-sm text-slate-900 resize-none font-medium leading-relaxed"
                         />
                       </div>
                     </motion.div>
@@ -308,7 +308,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold text-[#2EABDF] uppercase tracking-widest flex items-center gap-2 mb-3">
+                        <label className="text-[10px] font-bold text-[#FB8304] uppercase tracking-widest flex items-center gap-2 mb-3">
                           <Quote size={12} /> Narrative Synthesis
                         </label>
                         <textarea
@@ -320,14 +320,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold text-[#2EABDF] uppercase tracking-widest flex items-center gap-2 mb-3">
+                        <label className="text-[10px] font-bold text-[#FB8304] uppercase tracking-widest flex items-center gap-2 mb-3">
                           <Sparkles size={12} /> Character Anchor
                         </label>
                         <textarea
                           placeholder="The stable prompt for character/style consistency..."
                           value={formData.character_anchor}
                           onChange={(e) => setFormData({ ...formData, character_anchor: e.target.value })}
-                          className="w-full h-24 p-4 rounded-2xl bg-[#2EABDF]/5 border border-[#2EABDF]/10 focus:bg-white transition-all outline-none text-sm text-slate-900 resize-none font-medium italic"
+                          className="w-full h-24 p-4 rounded-2xl bg-[#FB8304]/5 border border-[#FB8304]/10 focus:bg-white transition-all outline-none text-sm text-slate-900 resize-none font-medium italic"
                         />
                       </div>
 
@@ -339,21 +339,21 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                           <button 
                             type="button" 
                             onClick={addFrame}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#11202C] text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#2EABDF] transition-all shadow-lg shadow-slate-200"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#11202C] text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#FB8304] transition-all shadow-lg shadow-slate-200"
                           >
                             <Plus size={12} /> Add Frame
                           </button>
                         </div>
                         
-                        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        <div className="space-y-2.5 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
                           {frames.map((frame, index) => (
                             <motion.div 
                               key={index} 
                               initial={{ opacity: 0, x: -10 }} 
                               animate={{ opacity: 1, x: 0 }}
-                              className="flex gap-3"
+                              className="flex gap-2.5"
                             >
-                              <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 shrink-0">
+                              <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 shrink-0">
                                 {index + 1}
                               </div>
                               <input
@@ -361,14 +361,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                                 placeholder={`Prompt for Frame ${index + 1}...`}
                                 value={frame}
                                 onChange={(e) => updateFrame(index, e.target.value)}
-                                className="flex-1 h-10 px-4 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white outline-none text-xs text-slate-900 font-medium"
+                                className="flex-1 h-9 px-4 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white outline-none text-[11px] text-slate-900 font-medium"
                               />
                               <button 
                                 type="button"
                                 onClick={() => removeFrame(index)}
-                                className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all"
+                                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-300 hover:bg-red-50 hover:text-red-500 transition-all"
                               >
-                                <Trash2 size={16} />
+                                <Trash2 size={15} />
                               </button>
                             </motion.div>
                           ))}
@@ -377,10 +377,10 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                     </motion.div>
                   )}
 
-                  <div className="mt-auto pt-8">
+                  <div className="pt-6">
                     <button 
                       disabled={loading}
-                      className="w-full h-14 bg-gradient-to-r from-[#FB8304] to-[#E22A1D] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:opacity-90 disabled:opacity-50 transition-all shadow-2xl shadow-[#E22A1D]/20 flex items-center justify-center gap-2.5 active:scale-[0.98]"
+                      className="w-full h-12 bg-gradient-to-r from-[#FB8304] to-[#E22A1D] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:opacity-90 disabled:opacity-50 transition-all shadow-2xl shadow-[#E22A1D]/20 flex items-center justify-center gap-2.5 active:scale-[0.98]"
                     >
                       {loading ? (
                         <>

@@ -66,7 +66,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, on
 
               <div className="mb-10">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-[#2EABDF]/5 flex items-center justify-center text-[#2EABDF]">
+                  <div className="w-8 h-8 rounded-xl bg-[#FB8304]/5 flex items-center justify-center text-[#FB8304]">
                     <ImageIcon size={18} />
                   </div>
                   <h2 className="text-xl font-black text-[#11202C] tracking-tight">Prompt Blueprint</h2>
