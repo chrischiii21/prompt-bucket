@@ -18,7 +18,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchQuery, setSearchQuer
         placeholder="Search prompts by keywords..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full h-14 pl-14 pr-16 rounded-2xl bg-white border border-slate-200 text-[#11202C] placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-[#FB8304]/10 focus:border-[#FB8304]/30 transition-all duration-300 shadow-sm font-medium"
+        className="w-full h-14 pl-14 pr-16 rounded-2xl bg-white border border-slate-200 text-[#11202C] placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-[#EE5A24]/10 focus:border-[#EE5A24]/30 transition-all duration-300 shadow-sm font-medium"
       />
       <div className="absolute inset-y-0 right-4 flex items-center">
         <button 

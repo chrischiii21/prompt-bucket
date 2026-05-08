@@ -8,17 +8,25 @@ interface UploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  existingCategories: string[];
 }
 
-const CATEGORIES = ['Realistic', '3D Render', 'Vector', 'Minimalist', 'Cyberpunk', 'Anime', 'Oil Painting'];
+const DEFAULT_CATEGORIES = ['Realistic', '3D Render', 'Vector', 'Minimalist', 'Cyberpunk', 'Anime', 'Oil Painting'];
 
-export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuccess }) => {
+export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuccess, existingCategories }) => {
+  const allCategories = React.useMemo(() => {
+    const combined = new Set([...DEFAULT_CATEGORIES, ...existingCategories]);
+    return Array.from(combined).sort();
+  }, [existingCategories]);
+
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState<'Image' | 'Video'>('Video');
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [frames, setFrames] = useState<string[]>(['']);
   const [toast, setToast] = useState<{ id: string, message: string, type: 'success' | 'error' | 'info' } | null>(null);
+  const [customCategory, setCustomCategory] = useState('');
+  const [isCustomCategory, setIsCustomCategory] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -97,7 +105,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
 
       // 2. Prepare Data
       const finalPromptText = type === 'Video' ? formData.title : formData.prompt_text;
-      const category = type === 'Video' ? 'Video' : formData.category;
+      const category = type === 'Video' ? 'Video' : (formData.category === 'Custom' ? customCategory : formData.category);
       
       let character_anchor = null;
       let framesData = null;
@@ -154,6 +162,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
       character_anchor: '',
       summary: '',
     });
+    setCustomCategory('');
+    setIsCustomCategory(false);
   };
 
   return (
@@ -262,12 +272,40 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                       <select
                         value={type === 'Video' ? 'Video' : formData.category}
                         disabled={type === 'Video'}
-                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                        className="w-full h-12 px-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-[#FB8304] transition-all outline-none text-sm text-[#11202C] font-black appearance-none disabled:opacity-60"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({ ...formData, category: val });
+                          setIsCustomCategory(val === 'Custom');
+                        }}
+                        className="w-full h-12 px-4 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:border-[#EE5A24] transition-all outline-none text-sm text-[#11202C] font-black appearance-none disabled:opacity-60"
                       >
-                        {type === 'Video' ? <option value="Video">Video Production</option> : CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                        {type === 'Video' ? (
+                          <option value="Video">Video Production</option>
+                        ) : (
+                          <>
+                            {allCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                            <option value="Custom">Custom...</option>
+                          </>
+                        )}
                       </select>
                     </div>
+                    {isCustomCategory && type === 'Image' && (
+                      <motion.div 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="col-span-2 md:col-span-1"
+                      >
+                        <label className="text-[10px] font-black text-[#EE5A24] uppercase tracking-widest block mb-2">Custom Category Name</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Enter category name..."
+                          value={customCategory}
+                          onChange={(e) => setCustomCategory(e.target.value)}
+                          className="w-full h-12 px-4 rounded-2xl bg-orange-50/30 border border-[#EE5A24]/20 focus:bg-white focus:border-[#EE5A24] transition-all outline-none text-sm text-[#11202C] font-black"
+                        />
+                      </motion.div>
+                    )}
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Tags</label>
                       <input
@@ -308,7 +346,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold text-[#FB8304] uppercase tracking-widest flex items-center gap-2 mb-3">
+                        <label className="text-[10px] font-bold text-[#EE5A24] uppercase tracking-widest flex items-center gap-2 mb-3">
                           <Quote size={12} /> Narrative Synthesis
                         </label>
                         <textarea
@@ -320,14 +358,14 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                       </div>
 
                       <div>
-                        <label className="text-[10px] font-bold text-[#FB8304] uppercase tracking-widest flex items-center gap-2 mb-3">
+                        <label className="text-[10px] font-bold text-[#EE5A24] uppercase tracking-widest flex items-center gap-2 mb-3">
                           <Sparkles size={12} /> Character Anchor
                         </label>
                         <textarea
                           placeholder="The stable prompt for character/style consistency..."
                           value={formData.character_anchor}
                           onChange={(e) => setFormData({ ...formData, character_anchor: e.target.value })}
-                          className="w-full h-24 p-4 rounded-2xl bg-[#FB8304]/5 border border-[#FB8304]/10 focus:bg-white transition-all outline-none text-sm text-slate-900 resize-none font-medium italic"
+                          className="w-full h-24 p-4 rounded-2xl bg-[#EE5A24]/5 border border-[#EE5A24]/10 focus:bg-white transition-all outline-none text-sm text-slate-900 resize-none font-medium italic"
                         />
                       </div>
 
@@ -339,7 +377,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                           <button 
                             type="button" 
                             onClick={addFrame}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#11202C] text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#FB8304] transition-all shadow-lg shadow-slate-200"
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#11202C] text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#EE5A24] transition-all shadow-lg shadow-slate-200"
                           >
                             <Plus size={12} /> Add Frame
                           </button>
@@ -380,7 +418,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                   <div className="pt-6">
                     <button 
                       disabled={loading}
-                      className="w-full h-12 bg-gradient-to-r from-[#FB8304] to-[#E22A1D] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:opacity-90 disabled:opacity-50 transition-all shadow-2xl shadow-[#E22A1D]/20 flex items-center justify-center gap-2.5 active:scale-[0.98]"
+                      className="w-full h-12 bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] hover:opacity-90 disabled:opacity-50 transition-all shadow-2xl shadow-[#E22A1D]/20 flex items-center justify-center gap-2.5 active:scale-[0.98]"
                     >
                       {loading ? (
                         <>

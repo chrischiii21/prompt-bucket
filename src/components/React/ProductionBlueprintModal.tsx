@@ -83,7 +83,7 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                     href={videoUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#FB8304]/10 text-[#FB8304] rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#FB8304]/20 transition-all shadow-sm"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#EE5A24]/10 text-[#EE5A24] rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#EE5A24]/20 transition-all shadow-sm"
                   >
                     <ExternalLink size={14} /> Watch Final
                   </a>
@@ -115,7 +115,7 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                           });
                         }}
                         className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
-                          versionIdx === idx ? 'bg-[#FB8304] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'
+                          versionIdx === idx ? 'bg-[#EE5A24] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'
                         }`}
                       >
                         V{idx + 1}
@@ -141,11 +141,11 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                   {currentVersion.summary && (
                     <section className="space-y-6">
                       <div className="flex items-center gap-3">
-                        <div className="h-px w-8 bg-[#FB8304]"></div>
-                        <h3 className="text-[10px] font-black text-[#FB8304] uppercase tracking-[0.3em]">Story Narrative Synthesis</h3>
+                        <div className="h-px w-8 bg-[#EE5A24]"></div>
+                        <h3 className="text-[10px] font-black text-[#EE5A24] uppercase tracking-[0.3em]">Story Narrative Synthesis</h3>
                       </div>
                       <div className="p-8 bg-[#FBFBFB] rounded-[2.5rem] border border-slate-100 relative overflow-hidden shadow-sm">
-                        <div className="absolute top-0 right-0 p-8 text-[#FB8304]/5">
+                        <div className="absolute top-0 right-0 p-8 text-[#EE5A24]/5">
                           <Sparkles size={100} />
                         </div>
                         <p className="text-base text-slate-800 leading-relaxed font-medium italic relative z-10">
@@ -158,18 +158,18 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                   {/* Character Anchor Section */}
                   <section className="space-y-6">
                     <div className="flex items-center gap-3">
-                      <div className="h-px w-8 bg-[#FB8304]"></div>
-                      <h3 className="text-[10px] font-black text-[#FB8304] uppercase tracking-[0.3em]">Character Identity Anchor</h3>
+                      <div className="h-px w-8 bg-[#EE5A24]"></div>
+                      <h3 className="text-[10px] font-black text-[#EE5A24] uppercase tracking-[0.3em]">Character Identity Anchor</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="p-8 bg-white border border-slate-100 rounded-[2rem] shadow-sm">
                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Core Description</h4>
-                        <p className="text-sm font-bold text-[#11202C] leading-relaxed italic border-l-2 border-[#FB8304]/20 pl-4 py-1">
+                        <p className="text-sm font-bold text-[#11202C] leading-relaxed italic border-l-2 border-[#EE5A24]/20 pl-4 py-1">
                           "{currentVersion.characterAnchor?.description || 'Standard Cinematic'}"
                         </p>
                       </div>
-                      <div className="p-8 bg-[#11202C] rounded-[2rem] shadow-xl text-[#FB8304]/80">
-                        <h4 className="text-[10px] font-black text-[#FB8304]/40 uppercase tracking-widest mb-4">Stable Prompt Seed</h4>
+                      <div className="p-8 bg-[#11202C] rounded-[2rem] shadow-xl text-[#EE5A24]/80">
+                        <h4 className="text-[10px] font-black text-[#EE5A24]/40 uppercase tracking-widest mb-4">Stable Prompt Seed</h4>
                         <p className="text-xs font-mono font-bold leading-relaxed text-white">
                           {currentVersion.characterAnchor?.seed_prompt || 'Standard Cinematic Seed'}
                         </p>
@@ -196,10 +196,10 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="group p-6 bg-white border border-slate-100 rounded-3xl hover:border-[#FB8304]/30 hover:shadow-xl hover:shadow-[#FB8304]/5 transition-all flex gap-6 items-start"
+                            className="group p-6 bg-white border border-slate-100 rounded-3xl hover:border-[#EE5A24]/30 hover:shadow-xl hover:shadow-[#EE5A24]/5 transition-all flex gap-6 items-start"
                           >
                             <div className="w-16 flex flex-col items-center gap-2 pt-2">
-                              <span className="text-[10px] font-black text-[#FB8304] uppercase tracking-widest">{timestamp}s</span>
+                              <span className="text-[10px] font-black text-[#EE5A24] uppercase tracking-widest">{timestamp}s</span>
                               <div className="w-px h-12 bg-slate-100" />
                               <div className="w-8 h-8 rounded-full bg-[#11202C] flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-[#11202C]/20">
                                 {index + 1}
@@ -208,7 +208,7 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
 
                             <div className="flex-1 space-y-4">
                               <div className="flex items-center gap-3">
-                                <span className="px-3 py-1 rounded-lg bg-[#FB8304]/5 text-[9px] font-black text-[#FB8304] uppercase tracking-widest">
+                                <span className="px-3 py-1 rounded-lg bg-[#EE5A24]/5 text-[9px] font-black text-[#EE5A24] uppercase tracking-widest">
                                   {frame.shot_type}
                                 </span>
                                 <span className="flex items-center gap-1.5 text-slate-400 text-[9px] font-bold uppercase tracking-widest">

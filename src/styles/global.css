@@ -2,8 +2,8 @@
 
 @theme {
   --color-brand-primary: #11202C;
-  --color-brand-secondary: #FB8304;
-  --color-brand-accent: #FB8304;
+  --color-brand-secondary: #EE5A24;
+  --color-brand-accent: #EE5A24;
   --color-brand-red: #E22A1D;
   
   --color-border: #f1f5f9;
@@ -36,11 +36,11 @@
 }
 
 .glass-card {
-  @apply bg-white/50 backdrop-blur-xl border border-[#11202C]/5 hover:border-[#FB8304]/30 hover:shadow-2xl hover:shadow-[#11202C]/5 transition-all duration-500;
+  @apply bg-white/50 backdrop-blur-xl border border-[#11202C]/5 hover:border-[#EE5A24]/30 hover:shadow-2xl hover:shadow-[#11202C]/5 transition-all duration-500;
 }
 
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-br from-[#11202C] via-[#11202C]/80 to-[#FB8304];
+  @apply bg-clip-text text-transparent bg-gradient-to-br from-[#11202C] via-[#11202C]/80 to-[#EE5A24];
 }
 
 .btn-primary {
@@ -64,7 +64,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-[#11202C]/10 rounded-full border-4 border-[#FBFBFB] hover:bg-[#FB8304]/20 transition-colors;
+  @apply bg-[#11202C]/10 rounded-full border-4 border-[#FBFBFB] hover:bg-[#EE5A24]/20 transition-colors;
 }
 
 /* Masonry Grid (handled by Tailwind columns-x) */

@@ -107,7 +107,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
           </div>
           <div>
             <h1 className="text-xl font-black tracking-tight text-[#11202C] leading-none">Prompt Bucket</h1>
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FB8304]">Community Library</span>
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#EE5A24]">Community Library</span>
           </div>
         </motion.div>
 
@@ -124,12 +124,12 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             href="/director"
             className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl bg-[#11202C]/5 border border-[#11202C]/10 text-[#11202C] hover:bg-[#11202C]/10 transition-all group"
           >
-            <div className="w-8 h-8 rounded-lg bg-[#FB8304] text-white flex items-center justify-center shadow-lg shadow-[#FB8304]/20 group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 rounded-lg bg-[#EE5A24] text-white flex items-center justify-center shadow-lg shadow-[#EE5A24]/20 group-hover:scale-110 transition-transform">
               <Clapperboard size={18} />
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-black uppercase tracking-widest leading-none">Director's Suite</span>
-              <span className="text-[9px] font-bold opacity-60 mt-1 text-[#FB8304]">AI Video Blueprint Creator</span>
+              <span className="text-[9px] font-bold opacity-60 mt-1 text-[#EE5A24]">AI Video Blueprint Creator</span>
             </div>
           </a>
         </div>
@@ -194,7 +194,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
                     onClick={() => { setContentType('image'); setSelectedCategory(category); }}
                     className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all duration-300 ${
                       selectedCategory === category && contentType === 'image'
-                        ? 'bg-gradient-to-r from-[#FB8304] to-[#E22A1D] text-white shadow-xl shadow-[#E22A1D]/20' 
+                        ? 'bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] text-white shadow-xl shadow-[#E22A1D]/20' 
                         : 'text-slate-500 hover:bg-slate-100/80 hover:text-[#11202C]'
                     }`}
                   >
@@ -214,7 +214,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setIsUploadModalOpen(true)}
-            className="w-full bg-[#FB8304] text-white text-[11px] font-black uppercase tracking-widest py-4.5 rounded-2xl hover:bg-[#ff8c00] transition-all shadow-2xl shadow-[#FB8304]/20 flex items-center justify-center gap-2.5 group"
+            className="w-full bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] text-white text-[11px] font-black uppercase tracking-widest py-4.5 rounded-2xl hover:opacity-90 transition-all shadow-2xl shadow-[#E22A1D]/20 flex items-center justify-center gap-2.5 group"
            >
              <div className="w-5 h-5 rounded-lg bg-white/10 flex items-center justify-center group-hover:rotate-90 transition-transform">
                <Plus size={14} />
@@ -230,7 +230,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
           <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-0.5 w-12 bg-gradient-to-r from-[#FB8304] to-[#E22A1D]"></div>
+                <div className="h-0.5 w-12 bg-gradient-to-r from-[#EE5A24] to-[#E22A1D]"></div>
                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Viewing</span>
               </div>
               <h2 className="text-5xl font-black text-[#11202C] tracking-tight mb-2">
@@ -243,7 +243,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             <div className="flex items-center gap-3">
               <button 
                 onClick={() => setIsFilterModalOpen(true)}
-                className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-[#11202C] text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm border-b-2 border-b-[#FB8304]/20"
+                className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-[#11202C] text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm border-b-2 border-b-[#EE5A24]/20"
               >
                 Sort & Filter
               </button>
@@ -260,6 +260,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.4, delay: idx * 0.05 }}
+                  className="h-full"
                 >
                   <PromptCard 
                     prompt={prompt} 
@@ -301,6 +302,7 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
         isOpen={isUploadModalOpen} 
         onClose={() => setIsUploadModalOpen(false)} 
         onSuccess={handleUploadSuccess}
+        existingCategories={categories}
       />
 
       <Toast toast={toast} onClose={() => setToast(null)} />

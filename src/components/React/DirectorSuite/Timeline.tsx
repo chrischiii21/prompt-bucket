@@ -16,7 +16,7 @@ export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, cur
     <div className="relative pl-10 md:pl-16">
       {/* The Timeline Rail */}
       <div className="absolute left-0 top-0 bottom-8 w-1 bg-slate-100 rounded-full" />
-      <div className="absolute left-0 top-0 bottom-8 w-1 bg-[#FB8304] rounded-full shadow-[0_0_10px_rgba(251,131,4,0.2)]" />
+      <div className="absolute left-0 top-0 bottom-8 w-1 bg-[#EE5A24] rounded-full shadow-[0_0_10px_rgba(251,131,4,0.2)]" />
       
       <div className="space-y-16">
         {frames.map((frame, index) => (

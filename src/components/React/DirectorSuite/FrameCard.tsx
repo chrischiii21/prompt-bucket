@@ -62,12 +62,12 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
   };
 
   return (
-    <div className={`group relative bg-white border ${isReadOnly ? 'border-emerald-200 shadow-emerald-100/50' : 'border-slate-200 hover:border-[#FB8304]/30'} rounded-[2rem] p-8 transition-all hover:shadow-2xl hover:shadow-slate-200/60`}>
+    <div className={`group relative bg-white border ${isReadOnly ? 'border-emerald-200 shadow-emerald-100/50' : 'border-slate-200 hover:border-[#EE5A24]/30'} rounded-[2rem] p-8 transition-all hover:shadow-2xl hover:shadow-slate-200/60`}>
       <div className="flex flex-col md:flex-row gap-8">
         {/* Frame Info */}
         <div className="md:w-52 shrink-0">
           <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">
-            <Film size={16} className="text-[#FB8304]" /> Frame {index + 1}
+            <Film size={16} className="text-[#EE5A24]" /> Frame {index + 1}
           </div>
           <div className="mb-4">
             <div className="text-2xl font-black text-[#11202C] tracking-tight leading-none mb-1">
@@ -77,7 +77,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
               <Clock size={10} /> Duration: {frame.duration || '3s'}
             </div>
           </div>
-          <div className="inline-block px-3 py-1 bg-[#FB8304]/5 border border-[#FB8304]/10 rounded-lg text-[9px] font-black text-[#FB8304] uppercase tracking-widest">
+          <div className="inline-block px-3 py-1 bg-[#EE5A24]/5 border border-[#EE5A24]/10 rounded-lg text-[9px] font-black text-[#EE5A24] uppercase tracking-widest">
             {frame.shot_type}
           </div>
         </div>
@@ -104,7 +104,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
                     </button>
                     <button 
                       onClick={handleSaveManual}
-                      className="px-4 py-1.5 bg-[#FB8304] text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#FB8304]/80 transition-all flex items-center gap-2 shadow-lg shadow-[#FB8304]/10"
+                      className="px-4 py-1.5 bg-[#EE5A24] text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#EE5A24]/80 transition-all flex items-center gap-2 shadow-lg shadow-[#EE5A24]/10"
                     >
                       <Check size={12} /> Save Changes
                     </button>
@@ -128,7 +128,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
               autoFocus
               value={editedPrompt}
               onChange={(e) => setEditedPrompt(e.target.value)}
-              className="w-full min-h-[120px] text-slate-600 leading-relaxed text-sm bg-[#FBFBFB] p-5 rounded-2xl border-2 border-[#FB8304]/30 focus:outline-none focus:border-[#FB8304] transition-all font-medium resize-none"
+              className="w-full min-h-[120px] text-slate-600 leading-relaxed text-sm bg-[#FBFBFB] p-5 rounded-2xl border-2 border-[#EE5A24]/30 focus:outline-none focus:border-[#EE5A24] transition-all font-medium resize-none"
             />
           ) : (
             <p className="text-slate-600 leading-relaxed text-sm bg-slate-50 p-5 rounded-2xl border border-slate-100 italic font-medium">
@@ -145,7 +145,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
                     value={tweak}
                     onChange={(e) => setTweak(e.target.value)}
                     placeholder="Describe a tweak (e.g. 'Add more rain', 'Make it cinematic')"
-                    className="flex-grow bg-slate-50 border border-slate-200 rounded-xl px-5 py-3 text-sm text-[#11202C] focus:outline-none focus:border-[#FB8304]/50 transition-all font-medium"
+                    className="flex-grow bg-slate-50 border border-slate-200 rounded-xl px-5 py-3 text-sm text-[#11202C] focus:outline-none focus:border-[#EE5A24]/50 transition-all font-medium"
                     onKeyDown={(e) => e.key === 'Enter' && handleRefine()}
                   />
                   <button 
@@ -167,7 +167,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
                 <div className="flex items-center gap-6">
                   <button 
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-[#FB8304] transition-all uppercase tracking-widest group"
+                    className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-[#EE5A24] transition-all uppercase tracking-widest group"
                   >
                     <RefreshCw size={14} className="group-hover:rotate-180 transition-transform duration-700" />
                     AI Refine with tweak
@@ -178,7 +178,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
                       setEditedPrompt(frame.final_prompt);
                       setIsManualEditing(true);
                     }}
-                    className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-[#FB8304] transition-all uppercase tracking-widest"
+                    className="flex items-center gap-2 text-[10px] font-black text-slate-400 hover:text-[#EE5A24] transition-all uppercase tracking-widest"
                   >
                     <Copy size={14} />
                     Manual Edit Prompt

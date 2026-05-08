@@ -81,7 +81,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {/* Media Format */}
                 <div>
                   <div className="flex items-center gap-2 mb-5 text-[#11202C]">
-                    <Layers size={14} className="text-[#FB8304]" />
+                    <Layers size={14} className="text-[#EE5A24]" />
                     <label className="text-[10px] font-black uppercase tracking-[0.2em]">Library Format</label>
                   </div>
                   <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-100">
@@ -116,7 +116,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {localContentType !== 'video' && (
                   <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <div className="flex items-center gap-2 mb-5 text-[#11202C]">
-                      <Tag size={14} className="text-[#FB8304]" />
+                      <Tag size={14} className="text-[#EE5A24]" />
                       <label className="text-[10px] font-black uppercase tracking-[0.2em]">Style Collections</label>
                     </div>
                     <div className="flex flex-wrap gap-2">
@@ -136,7 +136,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                           onClick={() => setLocalCategory(category)}
                           className={`px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border ${
                             localCategory === category 
-                              ? 'bg-gradient-to-r from-[#FB8304] to-[#E22A1D] border-[#E22A1D]/10 text-white shadow-lg shadow-[#E22A1D]/10' 
+                              ? 'bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] border-[#E22A1D]/10 text-white shadow-lg shadow-[#E22A1D]/10' 
                               : 'bg-slate-50 border-slate-100 text-slate-500 hover:text-[#11202C] hover:bg-slate-100'
                           }`}
                         >
@@ -150,7 +150,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
                 {/* Sort Order */}
                 <div>
                   <div className="flex items-center gap-2 mb-5 text-[#11202C]">
-                    <Calendar size={14} className="text-[#FB8304]" />
+                    <Calendar size={14} className="text-[#EE5A24]" />
                     <label className="text-[10px] font-black uppercase tracking-[0.2em]">Publish Order</label>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -183,7 +183,7 @@ export const FilterModal: React.FC<FilterModalProps> = ({
               <div className="mt-12">
                 <button 
                   onClick={handleApply}
-                  className="w-full py-5 bg-gradient-to-r from-[#FB8304] to-[#E22A1D] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-[#E22A1D]/20 hover:opacity-90 transition-all active:scale-[0.98]"
+                  className="w-full py-5 bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-[#E22A1D]/20 hover:opacity-90 transition-all active:scale-[0.98]"
                 >
                   Apply Filters
                 </button>

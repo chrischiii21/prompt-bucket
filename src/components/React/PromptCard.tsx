@@ -96,23 +96,23 @@ export const PromptCard: React.FC<{
     >
       {/* Preview Area */}
       <div className="p-4">
-        <div className="relative rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
+        <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
           <img 
             src={prompt.image_url} 
             alt={prompt.category}
-            className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
             loading="lazy"
           />
           <div className="absolute top-3 left-3">
              <span className="bg-[#11202C]/90 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg shadow-xl flex items-center gap-1.5 border border-white/10">
-               {isVideo && <Play size={10} className="fill-[#FB8304] text-[#FB8304]" />}
+               {isVideo && <Play size={10} className="fill-[#EE5A24] text-[#EE5A24]" />}
                {prompt.category}
              </span>
           </div>
           {isVideo && (
             <div className="absolute inset-0 flex items-center justify-center bg-[#11202C]/10 group-hover:bg-black/0 transition-all">
               <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-2xl">
-                <Play size={24} className="fill-[#FB8304] text-[#FB8304] ml-1" />
+                <Play size={24} className="fill-[#EE5A24] text-[#EE5A24] ml-1" />
               </div>
             </div>
           )}
@@ -122,8 +122,8 @@ export const PromptCard: React.FC<{
       {/* Content Area */}
       <div className="px-5 pb-5 flex-1 flex flex-col">
         <div className="flex items-center gap-2 mb-3">
-          <div className="h-px w-5 bg-gradient-to-r from-[#FB8304] to-[#E22A1D]"></div>
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#FB8304]">Prompter</span>
+          <div className="h-px w-5 bg-gradient-to-r from-[#EE5A24] to-[#E22A1D]"></div>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-[#EE5A24]">Prompter</span>
         </div>
         
         <p className="text-xs text-slate-600 leading-relaxed line-clamp-3 mb-6 font-bold">
@@ -137,7 +137,7 @@ export const PromptCard: React.FC<{
              </div>
              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Library AI</span>
            </div>
-           <span className="text-[10px] font-black text-[#FB8304]/40">
+           <span className="text-[10px] font-black text-[#EE5A24]/40">
              {new Date(prompt.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
            </span>
         </div>
@@ -157,7 +157,7 @@ export const PromptCard: React.FC<{
             onClick={copyToClipboard}
             className={`h-11 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] border shadow-sm ${
               copied 
-                ? 'bg-[#FB8304]/10 border-[#FB8304]/20 text-[#FB8304]' 
+                ? 'bg-[#EE5A24]/10 border-[#EE5A24]/20 text-[#EE5A24]' 
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
             title="Copy Prompt"
@@ -169,7 +169,7 @@ export const PromptCard: React.FC<{
         {isVideo && (
           <a 
             href={`/director?refine=${prompt.id}`}
-            className="h-11 px-4 rounded-xl bg-gradient-to-r from-[#FB8304] to-[#E22A1D] text-white hover:opacity-90 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-[#FB8304]/20"
+            className="h-11 px-4 rounded-xl bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] text-white hover:opacity-90 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-[#EE5A24]/20"
             title="Refine in Director Suite"
           >
             <RefreshCw size={16} />

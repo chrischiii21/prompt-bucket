@@ -368,10 +368,10 @@ export const DirectorSuite: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className="text-4xl md:text-5xl font-black tracking-tight text-[#11202C]"
                 >
-                  Director's <span className="text-[#FB8304] italic font-light">Suite</span>
+                  Director's <span className="text-[#EE5A24] italic font-light">Suite</span>
                 </motion.h1>
                 <div className="flex items-center gap-2 mt-2">
-                   <div className="h-0.5 w-8 bg-[#FB8304]"></div>
+                   <div className="h-0.5 w-8 bg-[#EE5A24]"></div>
                    <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.2em]">AI Video Blueprint Creator</p>
                 </div>
              </div>
@@ -442,12 +442,12 @@ export const DirectorSuite: React.FC = () => {
                 {/* Character Anchor Sidebar */}
                 <aside className="lg:col-span-1">
                   <div className="sticky top-8 bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#FB8304]/5 blur-3xl -mr-16 -mt-16 rounded-full" />
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#EE5A24]/5 blur-3xl -mr-16 -mt-16 rounded-full" />
                     
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">
-                        <div className="h-px w-6 bg-[#FB8304]"></div>
-                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#FB8304]">Character Anchor</span>
+                        <div className="h-px w-6 bg-[#EE5A24]"></div>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[#EE5A24]">Character Anchor</span>
                       </div>
                     </div>
                     
@@ -456,7 +456,7 @@ export const DirectorSuite: React.FC = () => {
                     {/* Read-only Description */}
                     <div className="mb-5">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Description</label>
-                      <div className="border-l-2 border-[#FB8304]/20 pl-4 py-1">
+                      <div className="border-l-2 border-[#EE5A24]/20 pl-4 py-1">
                         <p className="text-[11px] font-bold text-slate-800 leading-relaxed italic">
                           "{projectData.character_anchor?.description || 'Generic Production Style'}"
                         </p>
@@ -467,7 +467,7 @@ export const DirectorSuite: React.FC = () => {
                     <div className="mb-6">
                       <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Seed Prompt</label>
                       <div className="p-4 bg-[#11202C] rounded-xl border border-slate-800">
-                        <p className="text-[10px] text-[#FB8304]/80 font-mono break-words leading-relaxed">
+                        <p className="text-[10px] text-[#EE5A24]/80 font-mono break-words leading-relaxed">
                           {projectData.character_anchor?.seed_prompt || 'Standard Cinematic Seed'}
                         </p>
                       </div>
@@ -480,7 +480,7 @@ export const DirectorSuite: React.FC = () => {
                         <input 
                           type="text"
                           placeholder="e.g. 'add red glasses', 'futuristic outfit'..."
-                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 pr-12 text-[11px] text-[#11202C] focus:outline-none focus:border-[#FB8304] transition-all font-bold"
+                          className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 pr-12 text-[11px] text-[#11202C] focus:outline-none focus:border-[#EE5A24] transition-all font-bold"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               handleRefineCharacter(e.currentTarget.value);
@@ -526,7 +526,7 @@ export const DirectorSuite: React.FC = () => {
                             value={videoUrl}
                             onChange={(e) => setVideoUrl(e.target.value)}
                             placeholder="Paste video URL (YouTube, Vimeo, etc.)"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-[#11202C] focus:outline-none focus:border-[#FB8304]/50 transition-all font-medium"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-[#11202C] focus:outline-none focus:border-[#EE5A24]/50 transition-all font-medium"
                           />
                           <button 
                             onClick={handleSaveVideoLink}
@@ -560,7 +560,7 @@ export const DirectorSuite: React.FC = () => {
                           key={idx}
                           onClick={() => handleSwitchVersion(idx)}
                           className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            currentVersionIndex === idx ? 'bg-[#FB8304] text-white shadow-lg shadow-[#FB8304]/20' : 'text-slate-400 hover:text-slate-600'
+                            currentVersionIndex === idx ? 'bg-[#EE5A24] text-white shadow-lg shadow-[#EE5A24]/20' : 'text-slate-400 hover:text-slate-600'
                           }`}
                         >
                           V{idx + 1}
@@ -571,19 +571,19 @@ export const DirectorSuite: React.FC = () => {
 
                   {/* Story Summary Card */}
                 <div className="mb-12 p-10 bg-white rounded-[3rem] border border-slate-100 relative overflow-hidden group shadow-sm">
-                  <div className="absolute top-0 right-0 p-10 text-slate-50 group-hover:text-[#FB8304]/5 transition-colors pointer-events-none">
+                  <div className="absolute top-0 right-0 p-10 text-slate-50 group-hover:text-[#EE5A24]/5 transition-colors pointer-events-none">
                     <Sparkles size={140} />
                   </div>
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="h-px w-8 bg-[#FB8304]"></div>
-                        <h3 className="text-[10px] font-black text-[#FB8304] uppercase tracking-[0.2em]">Director's Narrative Summary</h3>
+                        <div className="h-px w-8 bg-[#EE5A24]"></div>
+                        <h3 className="text-[10px] font-black text-[#EE5A24] uppercase tracking-[0.2em]">Director's Narrative Summary</h3>
                       </div>
                       {!projectData.summary && (
                         <button 
                           onClick={() => {/* Trigger AI synthesis logic */}}
-                          className="flex items-center gap-2 text-[9px] font-black text-[#FB8304]/60 hover:text-[#FB8304] uppercase tracking-widest transition-colors"
+                          className="flex items-center gap-2 text-[9px] font-black text-[#EE5A24]/60 hover:text-[#EE5A24] uppercase tracking-widest transition-colors"
                         >
                           <RefreshCw size={12} /> Auto-Synthesize Story
                         </button>
@@ -622,8 +622,8 @@ export const DirectorSuite: React.FC = () => {
 
       {/* Background Decor */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#FB8304]/5 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#FB8304]/10 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#EE5A24]/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#EE5A24]/10 blur-[120px] rounded-full" />
       </div>
 
       {/* Global Loading Overlay */}
@@ -635,7 +635,7 @@ export const DirectorSuite: React.FC = () => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 bg-[#11202C]/60 backdrop-blur-md z-[100] flex flex-col items-center justify-center text-white"
           >
-            <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-[#FB8304] to-[#E22A1D] flex items-center justify-center shadow-2xl shadow-orange-500/40 mb-8 animate-bounce">
+            <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-[#EE5A24] to-[#E22A1D] flex items-center justify-center shadow-2xl shadow-orange-500/40 mb-8 animate-bounce">
               <Sparkles size={48} className="animate-pulse" />
             </div>
             <h3 className="text-2xl font-black mb-2 uppercase tracking-widest">Architecting Vision</h3>

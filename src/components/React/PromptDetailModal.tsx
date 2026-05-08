@@ -66,7 +66,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, on
 
               <div className="mb-10">
                 <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-xl bg-[#FB8304]/5 flex items-center justify-center text-[#FB8304]">
+                  <div className="w-8 h-8 rounded-xl bg-[#EE5A24]/5 flex items-center justify-center text-[#EE5A24]">
                     <ImageIcon size={18} />
                   </div>
                   <h2 className="text-xl font-black text-[#11202C] tracking-tight">Prompt Blueprint</h2>
@@ -98,7 +98,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, on
                 <section className="grid grid-cols-2 gap-6">
                   <div>
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <Calendar size={12} className="text-[#FB8304]" /> Created On
+                      <Calendar size={12} className="text-[#EE5A24]" /> Created On
                     </h3>
                     <p className="text-sm font-bold text-[#11202C]">
                       {new Date(prompt.created_at).toLocaleDateString(undefined, { 
@@ -110,7 +110,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ isOpen, on
                   </div>
                   <div>
                     <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <Tag size={12} className="text-[#FB8304]" /> Tags
+                      <Tag size={12} className="text-[#EE5A24]" /> Tags
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {prompt.tags?.map(tag => (
