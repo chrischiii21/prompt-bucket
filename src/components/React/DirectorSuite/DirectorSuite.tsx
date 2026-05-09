@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Save, CheckCircle, ArrowRight, Play, Copy, RefreshCw, Layout as LayoutIcon, UserCircle, X, Layers } from 'lucide-react';
+import { Sparkles, Save, CheckCircle, ArrowRight, Play, Copy, RefreshCw, Layout as LayoutIcon, UserCircle, X, Layers, Clapperboard } from 'lucide-react';
 import * as aiScripter from '../../../lib/aiScripter';
 import type { ProjectData, Frame } from '../../../lib/aiScripter';
 import { Timeline } from './Timeline';
@@ -62,8 +62,10 @@ export const DirectorSuite: React.FC = () => {
           total_duration: project.total_duration || '30s',
           character_anchor: project.character_anchor,
           frames: project.frames,
+          overall_prompt: project.overall_prompt || project.summary || '',
           id: project.id
         };
+        setVideoUrl(project.video_url || '');
         setHistory(loadedHistory);
         // The current DB record IS the last approved snapshot — restore it so re-approval archives correctly
         setLastApprovedSnapshot(loadedData);
@@ -102,6 +104,7 @@ export const DirectorSuite: React.FC = () => {
           total_duration: duration + 's',
           character_anchor: data.character_anchor || existingCharacter,
           frames: data.frames,
+          overall_prompt: data.overall_prompt || data.summary || '',
           status: 'Draft'
         });
         setStep('refining');
@@ -158,6 +161,8 @@ export const DirectorSuite: React.FC = () => {
         character_anchor: projectData.character_anchor,
         frames: projectData.frames,
         summary: projectData.summary,
+        overall_prompt: projectData.overall_prompt,
+        video_url: videoUrl,
         history: history // Persist the multiverse
       };
 
@@ -180,7 +185,9 @@ export const DirectorSuite: React.FC = () => {
         category: 'Video',
         character_anchor: projectData.character_anchor,
         frames: projectData.frames,
+        overall_prompt: projectData.overall_prompt,
         project_id: newProjectId,
+        video_url: videoUrl,
         tags: [projectData.project_name.toLowerCase(), 'director-suite', 'blueprint']
       };
 
@@ -190,7 +197,7 @@ export const DirectorSuite: React.FC = () => {
         await supabase.from('prompts').insert(promptPayload);
       }
 
-      setProjectData({ ...projectData, id: newProjectId, status: 'Draft' });
+      setProjectData({ ...projectData, id: newProjectId, status: 'Draft', video_url: videoUrl });
       setProjectId(newProjectId);
       setToast({ message: 'Vision Saved to Library!', type: 'success' });
     } catch (err: any) {
@@ -221,6 +228,7 @@ export const DirectorSuite: React.FC = () => {
           character_anchor: projectData.character_anchor,
           frames: projectData.frames,
           summary: projectData.summary,
+          video_url: videoUrl,
           history: updatedHistory
         };
         const { data, error } = await supabase.from('projects').insert(projectPayload).select();
@@ -236,6 +244,7 @@ export const DirectorSuite: React.FC = () => {
           character_anchor: projectData.character_anchor,
           frames: projectData.frames,
           project_id: finalProjectId,
+          video_url: videoUrl,
           history: updatedHistory,
           tags: [projectData.project_name.toLowerCase(), 'director-suite', 'blueprint']
         }).select();
@@ -250,6 +259,7 @@ export const DirectorSuite: React.FC = () => {
             character_anchor: projectData.character_anchor,
             frames: projectData.frames,
             summary: projectData.summary,
+            video_url: videoUrl,
             history: updatedHistory
           })
           .eq('id', finalProjectId);
@@ -263,13 +273,14 @@ export const DirectorSuite: React.FC = () => {
             prompt_text: `Concept: ${projectData.project_name}\n\nNarrative: ${librarySummary}`,
             character_anchor: projectData.character_anchor,
             frames: projectData.frames,
+            video_url: videoUrl,
             history: updatedHistory
           }).eq('id', originalPromptId);
         }
       }
 
       // Commit the updated history and snapshot this approval as the new baseline
-      const approvedData = { ...projectData, id: finalProjectId, status: 'Approved' };
+      const approvedData = { ...projectData, id: finalProjectId, status: 'Approved', video_url: videoUrl };
       setHistory(updatedHistory);
       setLastApprovedSnapshot(approvedData);
       setCurrentVersionIndex(-1); // Always show the newest version
@@ -295,6 +306,15 @@ export const DirectorSuite: React.FC = () => {
         .eq('id', projectId);
 
       if (updateError) throw updateError;
+      
+      // Also sync to prompts table
+      if (originalPromptId) {
+        await supabase
+          .from('prompts')
+          .update({ video_url: videoUrl })
+          .eq('id', originalPromptId);
+      }
+      
       showToast('Video URL Synchronized!');
     } catch (err: any) {
       console.error('Save link failed:', err);
@@ -509,36 +529,6 @@ export const DirectorSuite: React.FC = () => {
                       </div>
                       Character Synced
                     </div>
-
-                    {step === 'approved' && (
-                      <motion.div 
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-8 pt-8 border-t border-slate-100"
-                      >
-                        <div className="flex items-center gap-2 mb-4">
-                           <div className="h-px w-6 bg-slate-400"></div>
-                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Final Video Link</span>
-                        </div>
-                        <div className="space-y-3">
-                          <input 
-                            type="url"
-                            value={videoUrl}
-                            onChange={(e) => setVideoUrl(e.target.value)}
-                            placeholder="Paste video URL (YouTube, Vimeo, etc.)"
-                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-[#11202C] focus:outline-none focus:border-[#EE5A24]/50 transition-all font-medium"
-                          />
-                          <button 
-                            onClick={handleSaveVideoLink}
-                            disabled={isSavingUrl || !videoUrl.trim()}
-                            className="w-full py-3 bg-[#11202C] text-white rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#1a2f3f] transition-all disabled:opacity-50"
-                          >
-                            {isSavingUrl ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
-                            Save Link
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
                   </div>
                 </aside>
 
@@ -580,14 +570,6 @@ export const DirectorSuite: React.FC = () => {
                         <div className="h-px w-8 bg-[#EE5A24]"></div>
                         <h3 className="text-[10px] font-black text-[#EE5A24] uppercase tracking-[0.2em]">Director's Narrative Summary</h3>
                       </div>
-                      {!projectData.summary && (
-                        <button 
-                          onClick={() => {/* Trigger AI synthesis logic */}}
-                          className="flex items-center gap-2 text-[9px] font-black text-[#EE5A24]/60 hover:text-[#EE5A24] uppercase tracking-widest transition-colors"
-                        >
-                          <RefreshCw size={12} /> Auto-Synthesize Story
-                        </button>
-                      )}
                     </div>
                     <textarea
                       ref={(el) => {
@@ -606,15 +588,49 @@ export const DirectorSuite: React.FC = () => {
                   </div>
                 </div>
 
-                  <Timeline 
-                    frames={projectData.frames} 
-                    characterAnchor={projectData.character_anchor || { description: 'Generic Style', seed_prompt: 'Cinematic' }}
-                    currentSummary={projectData.summary || ''}
-                    status={projectData.status}
-                    onUpdateFrame={handleUpdateFrame}
-                  />
+                {/* Overall Production Video Link */}
+                <div className="mb-12 p-6 bg-[#EE5A24]/5 border border-[#EE5A24]/10 rounded-3xl flex flex-col md:flex-row items-center gap-6 shadow-inner">
+                  <div className="flex items-center gap-4 shrink-0">
+                    <div className="w-12 h-12 rounded-2xl bg-[#EE5A24] text-white flex items-center justify-center shadow-lg shadow-[#EE5A24]/20">
+                      <Play size={20} className="fill-white" />
+                    </div>
+                    <div>
+                      <h4 className="text-[10px] font-black text-[#EE5A24] uppercase tracking-widest">Production Delivery</h4>
+                      <p className="text-[11px] font-bold text-slate-600">Link your final masterpiece here</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex-grow flex gap-3 w-full">
+                    <input 
+                      type="url"
+                      value={videoUrl}
+                      onChange={(e) => setVideoUrl(e.target.value)}
+                      placeholder="YouTube, Vimeo, or Google Drive link..."
+                      className="flex-grow bg-white border border-[#EE5A24]/20 rounded-2xl px-6 py-3.5 text-sm text-[#11202C] focus:outline-none focus:border-[#EE5A24] transition-all font-medium placeholder:text-slate-300"
+                    />
+                    {(projectId || originalPromptId) && (
+                      <button 
+                        onClick={handleSaveVideoLink}
+                        disabled={isSavingUrl || !videoUrl.trim()}
+                        className="px-6 py-3.5 bg-[#11202C] text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-[#1a2f3f] transition-all disabled:opacity-50 shadow-xl shadow-[#11202C]/10"
+                      >
+                        {isSavingUrl ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
+                        Sync
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </motion.div>
+
+                <Timeline 
+                  frames={projectData.frames} 
+                  characterAnchor={projectData.character_anchor || { description: 'Generic Style', seed_prompt: 'Cinematic' }}
+                  currentSummary={projectData.summary || ''}
+                  status={projectData.status}
+                  onUpdateFrame={handleUpdateFrame}
+                  videoUrl={videoUrl}
+                />
+              </div>
+            </motion.div>
             )}
           </AnimatePresence>
         </main>

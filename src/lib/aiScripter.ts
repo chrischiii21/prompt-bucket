@@ -9,6 +9,7 @@ export interface Frame {
   duration: string;
   shot_type: string;
   final_prompt: string;
+  video_url?: string;
 }
 
 export interface ProjectData {
@@ -63,4 +64,30 @@ export const refineCharacter = async (characterAnchor: CharacterAnchor, tweak: s
   }
 
   return await response.json();
+};
+
+export const getVideoThumbnail = (url?: string): string | null => {
+  if (!url) return null;
+
+  // YouTube
+  const ytMatch = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|v\/|embed\/|shorths\/))([^?&"'>]+)/);
+  if (ytMatch && ytMatch[1]) {
+    return `https://img.youtube.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+  }
+
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(?:video\/|channels\/|groups\/([^/]*)\/videos\/|album\/(\d+)\/video\/|)(\d+)(?:$|\/|\?)/);
+  if (vimeoMatch && vimeoMatch[3]) {
+    // Note: This is a placeholder as Vimeo thumbnails usually need an API call
+    // But we can use this specific pattern for some cases or a generic high-quality placeholder
+    return `https://vumbnail.com/${vimeoMatch[3]}.jpg`;
+  }
+
+  // Google Drive
+  const driveMatch = url.match(/(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([^/?&]+)/);
+  if (driveMatch && driveMatch[1]) {
+    return `https://drive.google.com/thumbnail?id=${driveMatch[1]}&sz=w800`;
+  }
+
+  return null;
 };

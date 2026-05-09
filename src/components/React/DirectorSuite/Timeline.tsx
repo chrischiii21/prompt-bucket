@@ -9,9 +9,10 @@ interface TimelineProps {
   currentSummary: string;
   status: 'Draft' | 'Approved';
   onUpdateFrame: (index: number, updatedFrame: Frame, updatedSummary: string) => void;
+  videoUrl?: string;
 }
 
-export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, currentSummary, status, onUpdateFrame }) => {
+export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, currentSummary, status, onUpdateFrame, videoUrl }) => {
   return (
     <div className="relative pl-10 md:pl-16">
       {/* The Timeline Rail */}

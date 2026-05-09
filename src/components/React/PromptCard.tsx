@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Copy, Check, Play, ExternalLink, BookOpen, RefreshCw, Trash2, Maximize2 } from 'lucide-react';
+import { Copy, Check, Play, ExternalLink, BookOpen, RefreshCw, Trash2, Maximize2, Plus } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProductionBlueprintModal } from './ProductionBlueprintModal';
 import { PromptDetailModal } from './PromptDetailModal';
+import { VideoPlayerModal } from './VideoPlayerModal';
+import { getVideoThumbnail } from '../../lib/aiScripter';
 
 interface Prompt {
   id: string;
@@ -24,13 +26,19 @@ export const PromptCard: React.FC<{
   prompt: Prompt;
   onDeleted?: () => void;
   showToast?: (message: string, type: 'success' | 'error' | 'info') => void;
-}> = ({ prompt, onDeleted, showToast }) => {
+  isSelected?: boolean;
+  onSelect?: () => void;
+  isSelectionMode?: boolean;
+}> = ({ prompt, onDeleted, showToast, isSelected, onSelect, isSelectionMode }) => {
   const [copied, setCopied] = useState(false);
   const [isBlueprintOpen, setIsBlueprintOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState(prompt.video_url || '');
+
 
   const confirmDelete = async () => {
     setIsDeleting(true);
@@ -92,30 +100,70 @@ export const PromptCard: React.FC<{
   return (
     <motion.div 
       layout
-      className="group bg-white rounded-3xl overflow-hidden border border-slate-200 hover:border-brand-primary/30 hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500 flex flex-col h-full"
+      onClick={() => isSelectionMode && onSelect?.()}
+      className={`group bg-white rounded-3xl overflow-hidden border transition-all duration-500 flex flex-col h-full ${
+        isSelected 
+          ? 'border-[#EE5A24] ring-2 ring-[#EE5A24]/20 shadow-2xl shadow-[#EE5A24]/10' 
+          : 'border-slate-200 hover:border-brand-primary/30 hover:shadow-2xl hover:shadow-slate-200/50'
+      } ${isSelectionMode ? 'cursor-pointer' : ''}`}
     >
-      {/* Preview Area */}
       <div className="p-4">
-        <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
-          <img 
-            src={prompt.image_url} 
-            alt={prompt.category}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-            loading="lazy"
-          />
-          <div className="absolute top-3 left-3">
-             <span className="bg-[#11202C]/90 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg shadow-xl flex items-center gap-1.5 border border-white/10">
-               {isVideo && <Play size={10} className="fill-[#EE5A24] text-[#EE5A24]" />}
-               {prompt.category}
-             </span>
-          </div>
-          {isVideo && (
-            <div className="absolute inset-0 flex items-center justify-center bg-[#11202C]/10 group-hover:bg-black/0 transition-all">
-              <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md border border-white/30 flex items-center justify-center text-white shadow-2xl">
-                <Play size={24} className="fill-[#EE5A24] text-[#EE5A24] ml-1" />
+        <div className="relative aspect-video rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 group/media">
+            <>
+              <img 
+                src={getVideoThumbnail(prompt.video_url) || prompt.image_url} 
+                alt={prompt.category}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                loading="lazy"
+              />
+              <div className="absolute top-3 left-3 flex gap-2">
+                 <span className="bg-[#11202C]/90 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-[0.2em] px-2.5 py-1 rounded-lg shadow-xl flex items-center gap-1.5 border border-white/10">
+                   {isVideo && <Play size={10} className="fill-[#EE5A24] text-[#EE5A24]" />}
+                   {prompt.category}
+                 </span>
               </div>
-            </div>
-          )}
+              
+              {/* Selection Checkbox */}
+              {isSelectionMode && (
+                <div className="absolute top-3 right-3 z-30">
+                  <div className={`w-6 h-6 rounded-lg border-2 transition-all flex items-center justify-center ${
+                    isSelected 
+                      ? 'bg-[#EE5A24] border-[#EE5A24] shadow-lg shadow-[#EE5A24]/20' 
+                      : 'bg-white/20 backdrop-blur-md border-white/40'
+                  }`}>
+                    {isSelected && <Check size={14} className="text-white stroke-[4]" />}
+                  </div>
+                </div>
+              )}
+              
+              {isVideo && (
+                <div 
+                  className="absolute inset-0 flex items-center justify-center bg-[#11202C]/10 group-hover:bg-black/0 transition-all cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (isSelectionMode) {
+                      onSelect?.();
+                    } else {
+                      setIsBlueprintOpen(true);
+                    }
+                  }}
+                >
+                  <div 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (currentVideoUrl) {
+                        setIsVideoModalOpen(true);
+                      } else {
+                        setIsBlueprintOpen(true);
+                      }
+                    }}
+                    className="w-12 h-12 rounded-full bg-white text-[#EE5A24] border border-white/30 flex items-center justify-center shadow-2xl scale-100 hover:scale-125 transition-all z-20"
+                  >
+                    <Play size={20} className="fill-[#EE5A24] ml-0.5" />
+                  </div>
+                </div>
+              )}
+            </>
         </div>
       </div>
       
@@ -137,22 +185,27 @@ export const PromptCard: React.FC<{
              </div>
              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Library AI</span>
            </div>
-           <span className="text-[10px] font-black text-[#EE5A24]/40">
-             {new Date(prompt.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-           </span>
+         <span className="text-[10px] font-black text-[#EE5A24]/40">
+           {new Date(prompt.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+         </span>
         </div>
       </div>
 
       <div className="px-4 pb-4 mt-auto flex gap-2">
         <button 
-          onClick={() => isVideo ? setIsBlueprintOpen(true) : setIsDetailOpen(true)}
-          className="flex-1 h-11 rounded-xl bg-[#11202C] text-white hover:bg-[#1a2f3f] transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
+          onClick={(e) => { e.stopPropagation(); isSelectionMode ? onSelect?.() : (isVideo ? setIsBlueprintOpen(true) : setIsDetailOpen(true)); }}
+          className={`flex-1 h-11 rounded-xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm ${
+            isSelected ? 'bg-[#EE5A24] text-white' : 'bg-[#11202C] text-white hover:bg-[#1a2f3f]'
+          }`}
         >
-          {isVideo ? <BookOpen size={16} /> : <Maximize2 size={16} />}
-          <span className="text-[11px] font-black uppercase tracking-widest">{isVideo ? 'Blueprint' : 'Expand'}</span>
+          {isSelectionMode ? (
+            <>{isSelected ? <Check size={16} /> : <Plus size={16} />} <span className="text-[11px] font-black uppercase tracking-widest">{isSelected ? 'Selected' : 'Select'}</span></>
+          ) : (
+            <>{isVideo ? <BookOpen size={16} /> : <Maximize2 size={16} />} <span className="text-[11px] font-black uppercase tracking-widest">{isVideo ? 'Blueprint' : 'Expand'}</span></>
+          )}
         </button>
 
-        {!isVideo && (
+        {!isVideo && !isSelectionMode && (
           <button 
             onClick={copyToClipboard}
             className={`h-11 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] border shadow-sm ${
@@ -166,36 +219,36 @@ export const PromptCard: React.FC<{
           </button>
         )}
 
-        {isVideo && (
-          <a 
-            href={`/director?refine=${prompt.id}`}
-            className="h-11 px-4 rounded-xl bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] text-white hover:opacity-90 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-lg shadow-[#EE5A24]/20"
-            title="Refine in Director Suite"
-          >
-            <RefreshCw size={16} />
-          </a>
+        {isVideo && !isSelectionMode && (
+          <div className="flex gap-2">
+            <a 
+              href={`/director?refine=${prompt.id}`}
+              className="h-11 px-3 rounded-xl bg-[#EE5A24]/10 text-[#EE5A24] hover:bg-[#EE5A24]/20 border border-[#EE5A24]/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+              title="Refine in Director Suite"
+            >
+              <RefreshCw size={16} />
+              <span className="text-[10px] font-black uppercase tracking-widest">Refine</span>
+            </a>
+            <button 
+              onClick={handleDeleteClick}
+              disabled={isDeleting}
+              className="w-11 h-11 rounded-xl bg-red-50 border border-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center active:scale-95 shadow-sm"
+              title="Delete Item"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
         )}
-
-        {prompt.video_url && (
-          <a 
-            href={prompt.video_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="h-11 px-4 rounded-xl bg-[#11202C]/10 border border-[#11202C]/20 text-[#11202C] hover:bg-[#11202C]/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-sm"
-            title="Watch Video"
-          >
-            <ExternalLink size={16} />
-          </a>
+        {!isVideo && !isSelectionMode && (
+           <button 
+             onClick={handleDeleteClick}
+             disabled={isDeleting}
+             className="w-11 h-11 rounded-xl bg-red-50 border border-red-100 text-red-400 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center active:scale-95 shadow-sm"
+             title="Delete Item"
+           >
+             <Trash2 size={16} />
+           </button>
         )}
-
-        <button 
-          onClick={handleDeleteClick}
-          disabled={isDeleting}
-          className="w-11 h-11 rounded-xl bg-red-50 border border-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center active:scale-95 shadow-sm"
-          title="Delete Item"
-        >
-          <Trash2 size={16} />
-        </button>
       </div>
 
       {isVideo ? (
@@ -206,14 +259,26 @@ export const PromptCard: React.FC<{
           characterAnchor={prompt.character_anchor}
           frames={prompt.frames || []}
           summary={prompt.summary}
-          videoUrl={prompt.video_url}
+          videoUrl={currentVideoUrl}
+          prompt_id={prompt.id}
+          project_id={prompt.project_id}
           history={prompt.history}
+          onUpdateVideoUrl={(newUrl) => setCurrentVideoUrl(newUrl)}
         />
       ) : (
         <PromptDetailModal 
           isOpen={isDetailOpen}
           onClose={() => setIsDetailOpen(false)}
           prompt={prompt}
+        />
+      )}
+
+      {currentVideoUrl && (
+        <VideoPlayerModal 
+          isOpen={isVideoModalOpen}
+          onClose={() => setIsVideoModalOpen(false)}
+          videoUrl={currentVideoUrl}
+          title={prompt.prompt_text.split('\n\n')[0].replace('Concept: ', '')}
         />
       )}
 

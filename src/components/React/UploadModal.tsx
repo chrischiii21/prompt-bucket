@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { X, Upload, Image as ImageIcon, Loader2, Video, Clapperboard, Layers, Sparkles, Plus, Trash2, Film, Quote } from 'lucide-react';
+import { X, Upload, Image as ImageIcon, Loader2, Video, Clapperboard, Layers, Sparkles, Plus, Trash2, Film, Quote, Play } from 'lucide-react';
+import { getVideoThumbnail } from '../../lib/aiScripter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabaseClient';
 import { Toast } from './Toast';
@@ -23,7 +24,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
   const [type, setType] = useState<'Image' | 'Video'>('Video');
   const [preview, setPreview] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [frames, setFrames] = useState<string[]>(['']);
+  const [frames, setFrames] = useState<{prompt: string, video_url: string}[]>([{prompt: '', video_url: ''}]);
   const [toast, setToast] = useState<{ id: string, message: string, type: 'success' | 'error' | 'info' } | null>(null);
   const [customCategory, setCustomCategory] = useState('');
   const [isCustomCategory, setIsCustomCategory] = useState(false);
@@ -56,15 +57,15 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
     }
   };
 
-  const addFrame = () => setFrames([...frames, '']);
+  const addFrame = () => setFrames([...frames, {prompt: '', video_url: ''}]);
   const removeFrame = (index: number) => {
     if (frames.length > 1) {
       setFrames(frames.filter((_, i) => i !== index));
     }
   };
-  const updateFrame = (index: number, value: string) => {
+  const updateFrame = (index: number, field: 'prompt' | 'video_url', value: string) => {
     const newFrames = [...frames];
-    newFrames[index] = value;
+    newFrames[index][field] = value;
     setFrames(newFrames);
   };
 
@@ -77,7 +78,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
       if (!formData.prompt_text) return showToast('Please enter the prompt', 'error');
     } else {
       if (!formData.title) return showToast('Please enter a production title', 'error');
-      if (frames.some(f => !f.trim())) return showToast('Please fill in all frame prompts', 'error');
+      if (frames.some(f => !f.prompt.trim())) return showToast('Please fill in all frame prompts', 'error');
     }
 
     setLoading(true);
@@ -100,7 +101,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
         
         publicUrl = url;
       } else if (type === 'Video') {
-        publicUrl = 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800';
+        publicUrl = getVideoThumbnail(formData.video_url) || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800';
       }
 
       // 2. Prepare Data
@@ -119,7 +120,8 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
           timestamp: `0:${(i * 3).toString().padStart(2, '0')}`,
           duration: '3s',
           shot_type: 'Standard',
-          final_prompt: f
+          final_prompt: f.prompt,
+          video_url: f.video_url || null
         }));
       }
 
@@ -152,7 +154,7 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
   const resetForm = () => {
     setFile(null);
     setPreview(null);
-    setFrames(['']);
+    setFrames([{prompt: '', video_url: ''}]);
     setFormData({
       title: '',
       prompt_text: '',
@@ -203,27 +205,55 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                 </div>
 
                 <div 
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`flex-1 min-h-[180px] md:min-h-0 border-2 border-dashed rounded-[2rem] flex flex-col items-center justify-center p-6 transition-all cursor-pointer overflow-hidden relative group ${
-                    preview ? 'border-slate-100' : 'border-slate-200 hover:border-[#FF8200] hover:bg-white'
+                  onClick={() => type === 'Image' && fileInputRef.current?.click()}
+                  className={`flex-1 min-h-[180px] md:min-h-0 border-2 border-dashed rounded-[2rem] flex flex-col items-center justify-center p-6 transition-all relative overflow-hidden group ${
+                    type === 'Video' ? 'bg-[#11202C]/5 border-slate-100 cursor-default' : 
+                    (preview ? 'border-slate-100 cursor-pointer' : 'border-slate-200 hover:border-[#FF8200] hover:bg-white cursor-pointer')
                   }`}
                 >
                   <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*" className="hidden" />
-                  {preview ? (
+                  
+                  {type === 'Video' ? (
                     <>
-                      <img src={preview} className="absolute inset-0 w-full h-full object-contain bg-slate-50" />
-                      <div className="absolute inset-0 bg-[#011E41]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Upload className="text-white" />
-                      </div>
+                      {getVideoThumbnail(formData.video_url) ? (
+                        <div className="absolute inset-0 w-full h-full">
+                           <img src={getVideoThumbnail(formData.video_url)!} className="w-full h-full object-cover" alt="Video Preview" />
+                           <div className="absolute inset-0 bg-[#11202C]/40 flex flex-col items-center justify-center gap-3">
+                              <div className="w-12 h-12 rounded-full bg-white text-[#EE5A24] flex items-center justify-center shadow-xl">
+                                <Play size={20} className="fill-[#EE5A24] ml-0.5" />
+                              </div>
+                              <p className="text-[10px] font-black text-white uppercase tracking-widest">Video Thumbnail Detected</p>
+                           </div>
+                        </div>
+                      ) : (
+                        <div className="text-center p-8">
+                          <div className="w-16 h-16 rounded-3xl bg-white shadow-xl flex items-center justify-center mx-auto mb-4 text-[#EE5A24]">
+                            <Video size={32} />
+                          </div>
+                          <p className="text-sm font-black text-[#11202C] mb-1">Production Preview</p>
+                          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-relaxed">Enter a video link below to <br/>auto-generate cover</p>
+                        </div>
+                      )}
                     </>
                   ) : (
-                    <div className="text-center">
-                      <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
-                        <ImageIcon size={24} />
-                      </div>
-                      <p className="text-xs font-black text-[#011E41] mb-1">Cover Media</p>
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">or click to browse</p>
-                    </div>
+                    <>
+                      {preview ? (
+                        <>
+                          <img src={preview} className="absolute inset-0 w-full h-full object-contain bg-slate-50" />
+                          <div className="absolute inset-0 bg-[#011E41]/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <Upload className="text-white" />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center">
+                          <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
+                            <ImageIcon size={24} />
+                          </div>
+                          <p className="text-xs font-black text-[#011E41] mb-1">Cover Media</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">or click to browse</p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -394,13 +424,22 @@ export const UploadModal: React.FC<UploadModalProps> = ({ isOpen, onClose, onSuc
                               <div className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400 shrink-0">
                                 {index + 1}
                               </div>
-                              <input
-                                type="text"
-                                placeholder={`Prompt for Frame ${index + 1}...`}
-                                value={frame}
-                                onChange={(e) => updateFrame(index, e.target.value)}
-                                className="flex-1 h-9 px-4 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white outline-none text-[11px] text-slate-900 font-medium"
-                              />
+                              <div className="flex-1 space-y-2">
+                                <input
+                                  type="text"
+                                  placeholder={`Prompt for Frame ${index + 1}...`}
+                                  value={frame.prompt}
+                                  onChange={(e) => updateFrame(index, 'prompt', e.target.value)}
+                                  className="w-full h-9 px-4 rounded-xl bg-slate-50 border border-slate-100 focus:bg-white outline-none text-[11px] text-slate-900 font-medium"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder={`Video Link for Frame ${index + 1} (Optional)...`}
+                                  value={frame.video_url}
+                                  onChange={(e) => updateFrame(index, 'video_url', e.target.value)}
+                                  className="w-full h-8 px-4 rounded-xl bg-[#FBFBFB] border border-slate-100 focus:bg-white outline-none text-[9px] text-slate-600 font-medium"
+                                />
+                              </div>
                               <button 
                                 type="button"
                                 onClick={() => removeFrame(index)}

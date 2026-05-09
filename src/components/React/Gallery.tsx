@@ -4,8 +4,9 @@ import { SearchBar } from './SearchBar';
 import { UploadModal } from './UploadModal';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FilterModal } from './FilterModal';
-import { X, Layers, Plus, Clapperboard } from 'lucide-react';
+import { X, Layers, Plus, Clapperboard, Trash2, RefreshCw } from 'lucide-react';
 import { Toast } from './Toast';
+import { supabase } from '../../lib/supabaseClient';
 
 interface Prompt {
   id: string;
@@ -26,6 +27,8 @@ interface GalleryProps {
 export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
   const [prompts, setPrompts] = useState<Prompt[]>(initialPrompts);
   const [toast, setToast] = useState<{ id: string, message: string, type: 'success' | 'error' | 'info' } | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToast({ id: Date.now().toString(), message, type });
@@ -41,6 +44,8 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest');
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+  const [showBulkConfirm, setShowBulkConfirm] = useState(false);
 
   useEffect(() => {
     setPrompts(initialPrompts);
@@ -93,6 +98,64 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
     window.location.reload();
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredAndSortedPrompts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredAndSortedPrompts.map(p => p.id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    
+    setIsBulkDeleting(true);
+    setShowBulkConfirm(false);
+    try {
+      const idsArray = Array.from(selectedIds);
+      
+      // Get project IDs to clean up
+      const projectIds = prompts
+        .filter(p => selectedIds.has(p.id) && p.project_id)
+        .map(p => p.project_id);
+
+      // 1. Delete from prompts
+      const { error: promptError } = await supabase
+        .from('prompts')
+        .delete()
+        .in('id', idsArray);
+      
+      if (promptError) throw promptError;
+
+      // 2. Delete from projects
+      if (projectIds.length > 0) {
+        await supabase
+          .from('projects')
+          .delete()
+          .in('id', projectIds);
+      }
+
+      setPrompts(prev => prev.filter(p => !selectedIds.has(p.id)));
+      setSelectedIds(new Set());
+      setIsSelectionMode(false);
+      showToast(`Successfully deleted ${idsArray.length} items`, 'success');
+    } catch (err) {
+      console.error('Bulk delete failed:', err);
+      showToast('Bulk delete failed. Please try again.', 'error');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   return (
     <div className="flex h-screen bg-[#FBFBFB] overflow-hidden font-sans">
       {/* Sidebar - Fixed Glassmorphic Design */}
@@ -141,6 +204,8 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             <button
               onClick={() => { setContentType('all'); setSelectedCategory('All'); }}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
+                isSelectionMode ? 'opacity-50 pointer-events-none' : ''
+              } ${
                 contentType === 'all' && selectedCategory === 'All' ? 'bg-[#11202C] text-white shadow-xl shadow-[#11202C]/20' : 'text-slate-500 hover:bg-slate-100/80 hover:text-[#11202C]'
               }`}
             >
@@ -154,6 +219,8 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             <button
               onClick={() => { setContentType('image'); setSelectedCategory('All'); }}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
+                isSelectionMode ? 'opacity-50 pointer-events-none' : ''
+              } ${
                 contentType === 'image' && selectedCategory === 'All' ? 'bg-[#11202C] text-white shadow-xl shadow-[#11202C]/20' : 'text-slate-500 hover:bg-slate-100/80 hover:text-[#11202C]'
               }`}
             >
@@ -167,6 +234,8 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             <button
               onClick={() => { setContentType('video'); setSelectedCategory('All'); }}
               className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
+                isSelectionMode ? 'opacity-50 pointer-events-none' : ''
+              } ${
                 contentType === 'video' ? 'bg-[#11202C] text-white shadow-xl shadow-[#11202C]/20' : 'text-slate-500 hover:bg-slate-100/80 hover:text-[#11202C]'
               }`}
             >
@@ -213,8 +282,10 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
            <motion.button 
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setIsUploadModalOpen(true)}
-            className="w-full bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] text-white text-[11px] font-black uppercase tracking-widest py-4.5 rounded-2xl hover:opacity-90 transition-all shadow-2xl shadow-[#E22A1D]/20 flex items-center justify-center gap-2.5 group"
+            onClick={() => !isSelectionMode && setIsUploadModalOpen(true)}
+            className={`w-full bg-gradient-to-r from-[#EE5A24] to-[#E22A1D] text-white text-[11px] font-black uppercase tracking-widest py-4.5 rounded-2xl hover:opacity-90 transition-all shadow-2xl shadow-[#E22A1D]/20 flex items-center justify-center gap-2.5 group ${
+              isSelectionMode ? 'opacity-50 pointer-events-none grayscale' : ''
+            }`}
            >
              <div className="w-5 h-5 rounded-lg bg-white/10 flex items-center justify-center group-hover:rotate-90 transition-transform">
                <Plus size={14} />
@@ -241,16 +312,50 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
             </div>
             
             <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setIsFilterModalOpen(true)}
-                className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-[#11202C] text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm border-b-2 border-b-[#EE5A24]/20"
-              >
-                Sort & Filter
-              </button>
+              {isSelectionMode ? (
+                <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
+                  <button 
+                    onClick={toggleSelectAll}
+                    className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-600 text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all"
+                  >
+                    {selectedIds.size === filteredAndSortedPrompts.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                  <button 
+                    onClick={() => setShowBulkConfirm(true)}
+                    disabled={selectedIds.size === 0 || isBulkDeleting}
+                    className="px-4 py-2.5 rounded-xl bg-red-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all disabled:opacity-50 shadow-lg shadow-red-200 flex items-center gap-2"
+                  >
+                    {isBulkDeleting ? <RefreshCw size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                    Delete ({selectedIds.size})
+                  </button>
+                  <button 
+                    onClick={() => { setIsSelectionMode(false); setSelectedIds(new Set()); }}
+                    className="p-2.5 rounded-xl text-slate-400 hover:bg-slate-100 transition-all"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button 
+                    onClick={() => setIsSelectionMode(true)}
+                    className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-[#EE5A24] text-[10px] font-black uppercase tracking-widest hover:bg-red-50 transition-all shadow-sm border-b-2 border-b-[#EE5A24]/20 flex items-center gap-2"
+                  >
+                    <Trash2 size={14} />
+                    Bulk Delete
+                  </button>
+                  <button 
+                    onClick={() => setIsFilterModalOpen(true)}
+                    className="px-6 py-3 rounded-2xl bg-white border border-slate-200 text-[#11202C] text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center gap-2 shadow-sm"
+                  >
+                    Sort & Filter
+                  </button>
+                </>
+              )}
             </div>
           </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-7">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-10">
             <AnimatePresence mode="popLayout">
               {filteredAndSortedPrompts.map((prompt, idx) => (
                 <motion.div
@@ -266,6 +371,9 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
                     prompt={prompt} 
                     onDeleted={() => handleDeleteSuccess(prompt.id)}
                     showToast={showToast}
+                    isSelected={selectedIds.has(prompt.id)}
+                    onSelect={() => toggleSelect(prompt.id)}
+                    isSelectionMode={isSelectionMode}
                   />
                 </motion.div>
               ))}
@@ -306,6 +414,49 @@ export const Gallery: React.FC<GalleryProps> = ({ initialPrompts }) => {
       />
 
       <Toast toast={toast} onClose={() => setToast(null)} />
+
+      {/* Bulk Delete Confirmation Modal */}
+      <AnimatePresence>
+        {showBulkConfirm && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowBulkConfirm(false)}
+              className="absolute inset-0 bg-[#11202C]/60 backdrop-blur-xl"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm bg-white rounded-[2.5rem] p-10 shadow-2xl border border-slate-100 text-center"
+            >
+              <div className="w-20 h-20 rounded-[2rem] bg-red-50 text-red-500 flex items-center justify-center mx-auto mb-8 shadow-inner">
+                <Trash2 size={36} />
+              </div>
+              <h3 className="text-2xl font-black text-[#11202C] mb-3">Delete {selectedIds.size} Items?</h3>
+              <p className="text-slate-500 text-sm leading-relaxed mb-10 font-medium px-4">
+                You are about to permanently remove <span className="font-bold text-[#11202C]">{selectedIds.size} items</span> from your library. This action is irreversible.
+              </p>
+              <div className="grid grid-cols-2 gap-4">
+                <button 
+                  onClick={() => setShowBulkConfirm(false)}
+                  className="h-14 rounded-2xl bg-slate-50 text-slate-400 text-xs font-black uppercase tracking-widest hover:bg-slate-100 transition-all active:scale-95"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleBulkDelete}
+                  className="h-14 rounded-2xl bg-red-500 text-white text-xs font-black uppercase tracking-widest hover:bg-red-600 shadow-xl shadow-red-200 transition-all active:scale-95"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

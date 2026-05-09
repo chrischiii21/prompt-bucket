@@ -1,6 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Users, Clapperboard, Copy, Check, ExternalLink, Film, Sparkles, Clock } from 'lucide-react';
+import { X, Users, Clapperboard, Copy, Check, ExternalLink, Film, Sparkles, Clock, Edit3, Save, Loader2, Layers, Play } from 'lucide-react';
+import { VideoPlayerModal } from './VideoPlayerModal';
+import { supabase } from '../../lib/supabaseClient';
+import { getVideoThumbnail } from '../../lib/aiScripter';
 
 interface Frame {
   timestamp: string;
@@ -23,7 +26,9 @@ interface ProductionBlueprintModalProps {
   videoUrl?: string;
   summary?: string;
   project_id?: string;
+  prompt_id?: string;
   history?: any[];
+  onUpdateVideoUrl?: (newUrl: string) => void;
 }
 
 export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> = ({ 
@@ -34,17 +39,87 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
   frames,
   videoUrl,
   summary,
-  history = []
-}) => {
-  const [currentVersion, setCurrentVersion] = React.useState({ characterAnchor, frames, summary });
+  project_id,
+  prompt_id,
+   history = [],
+   onUpdateVideoUrl
+ }) => {
+   const [currentVersion, setCurrentVersion] = React.useState({ characterAnchor, frames, summary });
   const [versionIdx, setVersionIdx] = React.useState<number>(-1);
   const [copiedIndex, setCopiedIndex] = React.useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isEditingLink, setIsEditingLink] = React.useState(false);
+  const [newVideoUrl, setNewVideoUrl] = React.useState(videoUrl || '');
+  const [isSaving, setIsSaving] = React.useState(false);
+  
+  // Frame-level video state
+  const [linkingFrameIdx, setLinkingFrameIdx] = React.useState<number | null>(null);
+  const [editedFrameUrl, setEditedFrameUrl] = React.useState('');
+  const [playingFrameUrl, setPlayingFrameUrl] = React.useState<string | null>(null);
+
   let currentElapsed = 0;
 
   const copyPrompt = async (text: string, index: number) => {
     await navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 2000);
+  };
+
+  const handleSaveLink = async () => {
+    if (!prompt_id) return;
+    setIsSaving(true);
+    try {
+      // 1. Update prompts table
+      const { error: promptError } = await supabase
+        .from('prompts')
+        .update({ video_url: newVideoUrl })
+        .eq('id', prompt_id);
+      
+      if (promptError) throw promptError;
+
+      // 2. Update projects table if linked
+      if (project_id) {
+        await supabase
+          .from('projects')
+          .update({ video_url: newVideoUrl })
+          .eq('id', project_id);
+      }
+
+      if (onUpdateVideoUrl) onUpdateVideoUrl(newVideoUrl);
+      setIsSaving(false);
+      setIsEditingLink(false);
+    } catch (err) {
+      console.error('Failed to save link:', err);
+      alert('Failed to save video link. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleUpdateFrameVideo = async (index: number, url: string) => {
+    if (!currentVersion.frames) return;
+    
+    setIsSaving(true);
+    try {
+      const updatedFrames = [...currentVersion.frames];
+      updatedFrames[index] = { ...updatedFrames[index], video_url: url };
+      
+      if (project_id) {
+        const { error } = await supabase.from('projects').update({ frames: updatedFrames }).eq('id', project_id);
+        if (error) throw error;
+      }
+      if (prompt_id) {
+        const { error } = await supabase.from('prompts').update({ frames: updatedFrames }).eq('id', prompt_id);
+        if (error) throw error;
+      }
+
+      setCurrentVersion({ ...currentVersion, frames: updatedFrames });
+      setLinkingFrameIdx(null);
+    } catch (err) {
+      console.error('Frame update failed:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -74,20 +149,58 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                   </div>
                   <h2 className="text-2xl font-black text-[#11202C] tracking-tight">{projectName}</h2>
                 </div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Production Blueprint • {frames.length} Scenes</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Production Blueprint • {currentVersion.frames?.length || 0} Scenes</p>
               </div>
               
               <div className="flex items-center gap-4">
-                {videoUrl && (
-                  <a 
-                    href={videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-[#EE5A24]/10 text-[#EE5A24] rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#EE5A24]/20 transition-all shadow-sm"
-                  >
-                    <ExternalLink size={14} /> Watch Final
-                  </a>
-                )}
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex items-center gap-2">
+                    {isEditingLink ? (
+                      <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1 shadow-sm animate-in fade-in slide-in-from-right-4">
+                        <input 
+                          type="url"
+                          value={newVideoUrl}
+                          onChange={(e) => setNewVideoUrl(e.target.value)}
+                          placeholder="Paste Video URL..."
+                          className="bg-transparent border-none text-xs text-[#11202C] focus:outline-none w-48 font-medium px-2"
+                        />
+                        <button 
+                          onClick={handleSaveLink}
+                          disabled={isSaving}
+                          className="p-2 bg-[#11202C] text-white rounded-lg hover:bg-[#1a2f3f] transition-all disabled:opacity-50"
+                        >
+                          {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                        </button>
+                        <button 
+                          onClick={() => { setIsEditingLink(false); setNewVideoUrl(videoUrl || ''); }}
+                          className="p-2 text-slate-400 hover:text-slate-600 transition-all"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <button 
+                          onClick={() => setIsEditingLink(true)}
+                          className="flex items-center gap-2 px-3 py-2 bg-slate-50 text-slate-600 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-100 transition-all shadow-sm"
+                        >
+                          <Edit3 size={14} />
+                          {videoUrl ? 'Edit Link' : 'Add Video'}
+                        </button>
+
+                        {videoUrl && (
+                          <button 
+                            onClick={() => setIsPlaying(!isPlaying)}
+                            className="flex items-center gap-2 px-4 py-2 bg-[#EE5A24]/10 text-[#EE5A24] rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#EE5A24]/20 transition-all shadow-sm"
+                          >
+                            {isPlaying ? <X size={14} /> : <Film size={14} />}
+                            {isPlaying ? 'Close Video' : 'Watch Final'}
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
                 
                 {/* Version Multiverse Toggle */}
                 {history && history.length > 0 && (
@@ -108,11 +221,11 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                         key={idx}
                         onClick={() => {
                           setVersionIdx(idx);
-                          setCurrentVersion({ 
-                            characterAnchor: v.character_anchor, 
-                            frames: v.frames, 
-                            summary: v.summary 
-                          });
+                           setCurrentVersion({ 
+                             characterAnchor: v.character_anchor, 
+                             frames: v.frames, 
+                             summary: v.summary 
+                           });
                         }}
                         className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
                           versionIdx === idx ? 'bg-[#EE5A24] text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'
@@ -133,10 +246,9 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
               </div>
             </div>
 
-
-              {/* Scrollable Content */}
-              <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
-                <div className="max-w-5xl mx-auto space-y-12">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+              <div className="max-w-5xl mx-auto space-y-12">
                   {/* Narrative Synthesis Section */}
                   {currentVersion.summary && (
                     <section className="space-y-6">
@@ -176,9 +288,7 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                       </div>
                     </div>
                   </section>
-
-                  {/* Scene Timeline Section */}
-                  <section className="space-y-6 pb-12">
+                   <section className="space-y-6 pb-12">
                     <div className="flex items-center gap-3 mb-8">
                       <div className="h-px w-8 bg-[#11202C]"></div>
                       <h3 className="text-[10px] font-black text-[#11202C] uppercase tracking-[0.3em]">Production Scene Timeline</h3>
@@ -196,9 +306,35 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
-                            className="group p-6 bg-white border border-slate-100 rounded-3xl hover:border-[#EE5A24]/30 hover:shadow-xl hover:shadow-[#EE5A24]/5 transition-all flex gap-6 items-start"
+                            className="group p-6 bg-white border border-slate-100 rounded-3xl hover:border-[#EE5A24]/30 hover:shadow-xl hover:shadow-[#EE5A24]/5 transition-all flex flex-col md:flex-row gap-6 items-start"
                           >
-                            <div className="w-16 flex flex-col items-center gap-2 pt-2">
+                            {/* Shot Preview Space */}
+                            <div className="w-full md:w-48 aspect-video rounded-2xl bg-slate-50 border border-slate-100 relative overflow-hidden group/thumb shrink-0">
+                               {frame.video_url ? (
+                                 <div className="w-full h-full relative cursor-pointer" onClick={() => setPlayingFrameUrl(frame.video_url)}>
+                                   <img 
+                                     src={getVideoThumbnail(frame.video_url) || 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800'} 
+                                     className="w-full h-full object-cover group-hover/thumb:scale-110 transition-all duration-700"
+                                     alt="Shot Preview"
+                                   />
+                                   <div className="absolute inset-0 bg-[#11202C]/40 flex items-center justify-center">
+                                      <div className="w-10 h-10 rounded-full bg-white text-[#EE5A24] flex items-center justify-center shadow-lg transform group-hover/thumb:scale-110 transition-all">
+                                        <Play size={16} className="ml-0.5 fill-[#EE5A24]" />
+                                      </div>
+                                   </div>
+                                   <div className="absolute bottom-2 left-2 px-2 py-0.5 bg-black/60 backdrop-blur-md rounded text-[7px] font-black text-white uppercase tracking-widest">
+                                     Watch Scene
+                                   </div>
+                                 </div>
+                               ) : (
+                                 <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 gap-2">
+                                    <Film size={20} className="opacity-20" />
+                                    <span className="text-[8px] font-black uppercase tracking-widest opacity-40">No Preview</span>
+                                 </div>
+                               )}
+                            </div>
+
+                            <div className="w-16 hidden md:flex flex-col items-center gap-2 pt-2">
                               <span className="text-[10px] font-black text-[#EE5A24] uppercase tracking-widest">{timestamp}s</span>
                               <div className="w-px h-12 bg-slate-100" />
                               <div className="w-8 h-8 rounded-full bg-[#11202C] flex items-center justify-center text-white text-[10px] font-black shadow-lg shadow-[#11202C]/20">
@@ -215,29 +351,87 @@ export const ProductionBlueprintModal: React.FC<ProductionBlueprintModalProps> =
                                   <Clock size={12} /> {frame.duration}
                                 </span>
                               </div>
-                              <p className="text-sm font-bold text-[#11202C] leading-relaxed pr-12">
+                              <p className="text-sm font-bold text-[#11202C] leading-relaxed">
                                 {frame.final_prompt}
                               </p>
+
+                              {/* Frame Link Manager */}
+                              <div className="pt-2">
+                                {linkingFrameIdx === index ? (
+                                  <div className="flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                                    <input 
+                                      type="text"
+                                      value={editedFrameUrl}
+                                      onChange={(e) => setEditedFrameUrl(e.target.value)}
+                                      placeholder="Paste scene video link..."
+                                      className="flex-grow bg-slate-50 border border-[#EE5A24]/20 rounded-xl px-4 py-2 text-[10px] focus:outline-none focus:border-[#EE5A24] font-medium"
+                                      autoFocus
+                                    />
+                                    <button 
+                                      onClick={() => handleUpdateFrameVideo(index, editedFrameUrl)}
+                                      className="p-2 bg-[#EE5A24] text-white rounded-xl hover:bg-[#EE5A24]/80 transition-all"
+                                    >
+                                      <Check size={14} />
+                                    </button>
+                                    <button 
+                                      onClick={() => setLinkingFrameIdx(null)}
+                                      className="p-2 text-slate-400 hover:text-red-500"
+                                    >
+                                      <X size={14} />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={() => {
+                                      setLinkingFrameIdx(index);
+                                      setEditedFrameUrl(frame.video_url || '');
+                                    }}
+                                    className="flex items-center gap-2 text-[9px] font-black text-slate-400 hover:text-[#EE5A24] transition-all uppercase tracking-widest"
+                                  >
+                                    <Film size={12} />
+                                    {frame.video_url ? 'Update Scene Link' : 'Link Shot Video'}
+                                  </button>
+                                )}
+                              </div>
                             </div>
 
-                            <button
-                              onClick={() => copyPrompt(frame.final_prompt, index)}
-                              className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-                                copiedIndex === index 
-                                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' 
-                                  : 'bg-slate-50 text-slate-400 hover:bg-[#11202C] hover:text-white'
-                              }`}
-                            >
-                              {copiedIndex === index ? <Check size={20} /> : <Copy size={20} />}
-                            </button>
+                            <div className="flex flex-col gap-2 shrink-0">
+                              <button
+                                onClick={() => copyPrompt(frame.final_prompt, index)}
+                                className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                                  copiedIndex === index 
+                                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' 
+                                    : 'bg-slate-50 text-slate-400 hover:bg-[#11202C] hover:text-white'
+                                }`}
+                              >
+                                {copiedIndex === index ? <Check size={20} /> : <Copy size={20} />}
+                              </button>
+                            </div>
                           </motion.div>
                         );
                       })}
                     </div>
                   </section>
                 </div>
-              </div>
+            </div>
           </motion.div>
+          {videoUrl && (
+            <VideoPlayerModal 
+              isOpen={isPlaying}
+              onClose={() => setIsPlaying(false)}
+              videoUrl={videoUrl}
+              title={projectName}
+            />
+          )}
+
+          {playingFrameUrl && (
+            <VideoPlayerModal 
+              isOpen={!!playingFrameUrl}
+              onClose={() => setPlayingFrameUrl(null)}
+              videoUrl={playingFrameUrl}
+              title={`Shot Detail`}
+            />
+          )}
         </div>
       )}
     </AnimatePresence>
