@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 
 export const POST: APIRoute = async ({ request }) => {
   const body = await request.json();
-  const { concept, durationInSeconds, productionType, existingCharacter } = body;
+  const { concept, durationInSeconds, productionType, genre, referenceImageUrl, existingCharacter } = body;
   
   const apiKey = import.meta.env.GROQ_API_KEY;
 
@@ -25,15 +25,60 @@ export const POST: APIRoute = async ({ request }) => {
   // Production Type specific logic
   let modalityInstruction = '';
   let characterContext = '';
+  let imageAnalysis = '';
+
+  if (referenceImageUrl && productionType === 'character') {
+    try {
+      console.log('Analyzing reference image with Vision model...');
+      const visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'llama-3.2-11b-vision-preview',
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: 'Describe this character in extreme detail for a consistent video production. Focus on facial features, clothing, colors, and unique traits. Be concise but thorough.' },
+                { type: 'image_url', image_url: { url: referenceImageUrl } }
+              ]
+            }
+          ]
+        })
+      });
+
+      if (visionResponse.ok) {
+        const visionData = await visionResponse.json();
+        imageAnalysis = visionData.choices[0].message.content;
+        console.log('Vision analysis complete.');
+      }
+    } catch (err) {
+      console.error('Vision analysis failed:', err);
+    }
+  }
 
   if (productionType === 'character') {
     modalityInstruction = `This is a CHARACTER-DRIVEN narrative. Focus on human-like identity, facial expressions, and consistent character performance.`;
-    characterContext = existingCharacter 
-      ? `USE THIS EXISTING CHARACTER:
+    
+    if (existingCharacter) {
+      characterContext = `USE THIS EXISTING CHARACTER:
          Description: ${existingCharacter.description}
          Seed Prompt: ${existingCharacter.seed_prompt}
-         Maintain this identity exactly.`
-      : `Create a "Character Anchor": A detailed physical description of the main character that must remain constant.`;
+         Maintain this identity exactly.`;
+    } else if (imageAnalysis) {
+      characterContext = `CRITICAL VISUAL REFERENCE (from uploaded image):
+         Description: ${imageAnalysis}
+         
+         INSTRUCTIONS:
+         1. You MUST use the exact physical traits from this description to form the 'character_anchor.description'.
+         2. Every single frame's 'final_prompt' MUST begin by referencing these traits to maintain 100% visual fidelity with the uploaded image.
+         3. The 'character_anchor.seed_prompt' should be a condensed, high-weight version of these traits optimized for image generation.`;
+    } else {
+      characterContext = `Create a "Character Anchor": A detailed physical description of the main character that must remain constant.`;
+    }
   } else if (productionType === 'text') {
     modalityInstruction = `This is a TEXT & GRAPHICS video (e.g., Quiz, Social Ad, Info-card). 
     Focus on kinetic typography, text overlays, and generic background visuals. 
@@ -50,11 +95,20 @@ export const POST: APIRoute = async ({ request }) => {
   const systemPrompt = `You are a professional AI Video Director. 
 Your task is to take a concept and create a "Production Blueprint".
 
+CRITICAL MODEL CONSTRAINTS: 
+All generated prompts MUST be optimized for high-end image/video generation (Nano Banana/Veo compatible).
+- DO NOT mention 'Nano Banana' or 'Veo' or any model names in the final output text.
+- Ensure prompts are highly descriptive but visually 'executable' (avoid impossible geometry or logical fallacies).
+- Focus on material textures (e.g., 'brushed chrome'), specific lighting, and clear camera movements.
+- Maintain strict visual continuity between scenes.
+
 ${modalityInstruction}
 
 ${durationInstruction}
 
 ${characterContext}
+
+${genre ? `PRIMARY GENRE/STYLE: ${genre}` : ''}
 
 First, write a 2-3 sentence "Story Summary" that describes the overarching narrative flow.
 Then, for each scene, generate a timestamped "Beat Sheet" with a duration, shot type, and a final prompt.
@@ -102,7 +156,7 @@ Note: If the production type is 'text', the final_prompt field MUST include the 
           model: 'llama-3.3-70b-versatile',
           messages: [
             { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Concept: ${concept}` }
+            { role: 'user', content: `Concept: ${concept}${genre ? `\nGenre/Style: ${genre}` : ''}` }
           ],
           response_format: { type: 'json_object' }
         })
@@ -150,7 +204,7 @@ Note: If the production type is 'text', the final_prompt field MUST include the 
       // If we got here, success!
       // Maintain image_url if applicable
       if (visionData.character_anchor) {
-        visionData.character_anchor.image_url = existingCharacter?.image_url || null;
+        visionData.character_anchor.image_url = referenceImageUrl || existingCharacter?.image_url || null;
       }
 
       // Ensure total_duration is set correctly if not provided by AI

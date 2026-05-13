@@ -21,11 +21,11 @@ export interface ProjectData {
   frames: Frame[];
 }
 
-export const generateVision = async (concept: string, durationInSeconds: number, productionType: string, existingCharacter?: CharacterAnchor): Promise<ProjectData> => {
+export const generateVision = async (concept: string, durationInSeconds: number, productionType: string, genre: string, referenceImageUrl?: string, existingCharacter?: CharacterAnchor): Promise<ProjectData> => {
   const response = await fetch('/api/generate-vision', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ concept, durationInSeconds, productionType, existingCharacter })
+    body: JSON.stringify({ concept, durationInSeconds, productionType, genre, referenceImageUrl, existingCharacter })
   });
 
   if (!response.ok) {
@@ -34,6 +34,22 @@ export const generateVision = async (concept: string, durationInSeconds: number,
   }
 
   return await response.json();
+};
+
+export const generateIdeas = async (genre: string, productionType: string): Promise<string[]> => {
+  const response = await fetch('/api/generate-ideas', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ genre, productionType })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to generate ideas');
+  }
+
+  const data = await response.json();
+  return data.ideas;
 };
 
 export const refineFrame = async (frame: Frame, tweak: string, characterAnchor: CharacterAnchor, currentSummary: string): Promise<{ final_prompt: string, summary: string }> => {

@@ -10,7 +10,7 @@ interface FrameCardProps {
   characterAnchor: CharacterAnchor;
   currentSummary: string;
   isReadOnly: boolean;
-  onUpdate: (updatedFrame: Frame, updatedSummary: string) => void;
+  onUpdate: (updatedFrame: Frame, updatedSummary: string, shouldCascade?: boolean) => void;
 }
 
 export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnchor, currentSummary, isReadOnly, onUpdate }) => {
@@ -34,7 +34,7 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
     setIsRefining(true);
     try {
       const result = await refineFrame(frame, tweak, characterAnchor, currentSummary);
-      onUpdate({ ...frame, final_prompt: result.final_prompt }, result.summary);
+      onUpdate({ ...frame, final_prompt: result.final_prompt }, result.summary, true);
       setEditedPrompt(result.final_prompt);
       setTweak('');
       setIsEditing(false);
@@ -45,9 +45,21 @@ export const FrameCard: React.FC<FrameCardProps> = ({ frame, index, characterAnc
     }
   };
 
-  const handleSaveManual = () => {
-    onUpdate({ ...frame, final_prompt: editedPrompt, video_url: editedVideoUrl }, currentSummary);
-    setIsManualEditing(false);
+  const handleSaveManual = async () => {
+    setIsRefining(true);
+    try {
+      // Treat the manual edit as a strong tweak to ensure AI integration and character consistency
+      const result = await refineFrame(frame, `INTEGRATE THIS MANUAL EDIT: ${editedPrompt}`, characterAnchor, currentSummary);
+      onUpdate({ ...frame, final_prompt: result.final_prompt, video_url: editedVideoUrl }, result.summary, true);
+      setEditedPrompt(result.final_prompt);
+      setIsManualEditing(false);
+    } catch (error) {
+      console.error('Manual edit refinement failed, saving raw:', error);
+      onUpdate({ ...frame, final_prompt: editedPrompt, video_url: editedVideoUrl }, currentSummary, true);
+      setIsManualEditing(false);
+    } finally {
+      setIsRefining(false);
+    }
   };
 
   const handleQuickLink = () => {

@@ -1,22 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Clock, Clapperboard, ArrowRight, UserCircle, Check, X, RefreshCw } from 'lucide-react';
+import { Sparkles, Clock, Clapperboard, ArrowRight, UserCircle, Check, X, RefreshCw, Upload, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../../../lib/supabaseClient';
+import * as aiScripter from '../../../lib/aiScripter';
 import type { CharacterAnchor } from '../../../lib/aiScripter';
 
+const FALLBACK_PROMPTS = {
+  character: ["A mysterious traveler in a strange land.", "A hero facing their greatest challenge."],
+  text: ["Modern title sequence with bold typography.", "Clean infographic presentation."],
+  abstract: ["Ethereal lights in a deep void.", "Rhythmic patterns of color and sound."]
+};
+
+const getRandomPrompts = (type: keyof typeof FALLBACK_PROMPTS, count: number = 2) => {
+  const pool = FALLBACK_PROMPTS[type] || [];
+  return [...pool].sort(() => 0.5 - Math.random()).slice(0, count);
+};
+
 interface ScripterFormProps {
-  onGenerate: (concept: string, duration: number, productionType: string, existingCharacter?: CharacterAnchor) => void;
+  onGenerate: (concept: string, duration: number, productionType: string, genre: string, existingCharacter?: CharacterAnchor) => void;
   isGenerating: boolean;
 }
 
 export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenerating }) => {
   const [concept, setConcept] = useState('');
+  const [genre, setGenre] = useState('');
   const [duration, setDuration] = useState(30);
   const [durationMode, setDurationMode] = useState<'preset' | 'custom' | 'flexible'>('preset');
   const [productionType, setProductionType] = useState<'character' | 'text' | 'abstract'>('character');
   const [approvedProjects, setApprovedProjects] = useState<any[]>([]);
   const [selectedCharacter, setSelectedCharacter] = useState<CharacterAnchor | null>(null);
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
+  const [characterOption, setCharacterOption] = useState<'library' | 'upload'>('library');
+  const [referenceImageUrl, setReferenceImageUrl] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [activePrompts, setActivePrompts] = useState<string[]>([]);
+  const [isGeneratingIdeas, setIsGeneratingIdeas] = useState(false);
+
+  useEffect(() => {
+    setActivePrompts(getRandomPrompts(productionType as any));
+  }, [productionType]);
+
+  const handleGenerateIdeas = async () => {
+    if (!genre.trim()) return;
+    setIsGeneratingIdeas(true);
+    try {
+      const ideas = await aiScripter.generateIdeas(genre, productionType);
+      setActivePrompts(ideas);
+    } catch (err) {
+      console.error('Failed to generate ideas:', err);
+    } finally {
+      setIsGeneratingIdeas(false);
+    }
+  };
 
   useEffect(() => {
     const fetchCharacters = async () => {
@@ -42,13 +79,50 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
     fetchCharacters();
   }, []);
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Basic validation
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file.');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
+      const filePath = `character-references/${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('prompt-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('prompt-images')
+        .getPublicUrl(filePath);
+
+      setReferenceImageUrl(publicUrl);
+    } catch (err: any) {
+      console.error('Upload failed:', err);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (concept.trim()) {
       const finalDuration = durationMode === 'flexible' ? 0 : duration;
-      onGenerate(concept, finalDuration, productionType, selectedCharacter || undefined);
+      onGenerate(concept, finalDuration, productionType, genre, referenceImageUrl, selectedCharacter || undefined);
     }
   };
+
+  const GENRE_TAGS = ['Cyberpunk', 'Cinematic Noir', 'Fantasy', 'Corporate', 'Minimalist', 'Sci-Fi', 'Horror', 'Documentary'];
 
   return (
     <div className="max-w-6xl mx-auto py-2">
@@ -106,75 +180,135 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
                 </div>
               </div>
 
-              {/* 2. Character Reference */}
-              {productionType === 'character' && approvedProjects.length > 0 && (
-                <div className="relative">
+              {/* 2. Character Anchor */}
+              {productionType === 'character' && (
+                <div className="mb-8">
                   <div className="flex items-center justify-between mb-4 ml-1">
                     <div className="flex items-center gap-2">
-                        <div className="h-px w-6 bg-emerald-500"></div>
-                        <label className="block text-[10px] font-black text-emerald-500 uppercase tracking-[0.2em]">2. Character Anchor</label>
+                      <div className="h-px w-6 bg-[#EE5A24]"></div>
+                      <label className="block text-[10px] font-black text-[#EE5A24] uppercase tracking-[0.2em]">2. Character Anchor</label>
                     </div>
-                    <button 
-                      type="button"
-                      onClick={() => setShowCharacterPicker(!showCharacterPicker)}
-                      className="text-[9px] font-bold text-slate-400 hover:text-[#11202C] uppercase tracking-widest transition-colors"
-                    >
-                      {showCharacterPicker ? 'Close' : 'Browse'}
-                    </button>
+                    <div className="flex bg-slate-50 p-1 rounded-xl border border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => setCharacterOption('library')}
+                        className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${characterOption === 'library' ? 'bg-white text-[#EE5A24] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        Library
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCharacterOption('upload')}
+                        className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${characterOption === 'upload' ? 'bg-white text-[#EE5A24] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                      >
+                        Upload
+                      </button>
+                    </div>
                   </div>
 
-                  <AnimatePresence>
-                    {showCharacterPicker && (
-                      <motion.div 
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="overflow-hidden mb-4"
+                  <AnimatePresence mode="wait">
+                    {characterOption === 'library' ? (
+                      <motion.div
+                        key="library"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="space-y-4"
                       >
-                        <div className="grid grid-cols-1 gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 max-h-[180px] overflow-y-auto custom-scrollbar">
-                          {approvedProjects.map((project) => (
-                            <button
-                              key={project.id}
-                              type="button"
-                              onClick={() => setSelectedCharacter(
-                                selectedCharacter?.description === project.character_anchor.description ? null : project.character_anchor
-                              )}
-                              className={`p-3 rounded-lg border transition-all text-left ${
-                                selectedCharacter?.description === project.character_anchor.description
-                                  ? 'bg-white border-emerald-500 shadow-sm'
-                                  : 'bg-white border-slate-100 hover:border-slate-200'
-                              }`}
-                            >
-                              <p className="text-[10px] font-bold text-slate-800 uppercase truncate">
-                                {project.project_name}
-                              </p>
-                            </button>
-                          ))}
-                        </div>
+                        {approvedProjects.length > 0 && (
+                          <>
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Saved Identities</span>
+                              <button 
+                                type="button"
+                                onClick={() => setShowCharacterPicker(!showCharacterPicker)}
+                                className="text-[8px] font-bold text-[#EE5A24] uppercase tracking-widest"
+                              >
+                                {showCharacterPicker ? 'Close' : 'Browse'}
+                              </button>
+                            </div>
+
+                            {showCharacterPicker && (
+                              <div className="grid grid-cols-1 gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 max-h-[150px] overflow-y-auto custom-scrollbar">
+                                {approvedProjects.map((project) => (
+                                  <button
+                                    key={project.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedCharacter(project.character_anchor);
+                                      setShowCharacterPicker(false);
+                                    }}
+                                    className={`p-3 rounded-lg border transition-all text-left bg-white ${
+                                      selectedCharacter?.description === project.character_anchor.description
+                                        ? 'border-[#EE5A24] shadow-sm'
+                                        : 'border-slate-100 hover:border-slate-200'
+                                    }`}
+                                  >
+                                    <p className="text-[9px] font-bold text-slate-800 uppercase truncate">{project.project_name}</p>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        {selectedCharacter ? (
+                          <div className="p-4 bg-white border-2 border-[#EE5A24]/30 rounded-2xl flex items-center gap-4 shadow-lg shadow-[#EE5A24]/5">
+                            <img src={selectedCharacter.image_url || ''} className="w-12 h-12 rounded-xl object-cover" alt="" />
+                            <div className="flex-grow min-w-0">
+                              <p className="text-[8px] font-black text-[#EE5A24] uppercase tracking-widest mb-0.5">Selected Anchor</p>
+                              <p className="text-[10px] font-bold text-[#11202C] truncate leading-tight">{selectedCharacter.description.split(',')[0]}</p>
+                            </div>
+                            <button onClick={() => setSelectedCharacter(null)} className="text-slate-300 hover:text-red-500"><X size={14} /></button>
+                          </div>
+                        ) : !showCharacterPicker && (
+                          <button
+                            type="button"
+                            onClick={() => setShowCharacterPicker(true)}
+                            className="w-full py-6 border-2 border-dashed border-slate-100 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-[#EE5A24]/30 hover:bg-slate-50 transition-all text-slate-300 hover:text-[#EE5A24]"
+                          >
+                            <UserCircle size={20} />
+                            <span className="text-[9px] font-black uppercase tracking-widest">Choose From Library</span>
+                          </button>
+                        )}
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="upload"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                      >
+                        <input 
+                          type="file" 
+                          ref={fileInputRef}
+                          onChange={handleImageUpload}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                        
+                        {referenceImageUrl ? (
+                          <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-[#EE5A24]/30 shadow-lg shadow-[#EE5A24]/5 group">
+                            <img src={referenceImageUrl} className="w-full h-full object-cover" alt="Reference" />
+                            <div className="absolute inset-0 bg-[#11202C]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                              <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 bg-white rounded-lg text-[#11202C] hover:text-[#EE5A24]"><RefreshCw size={14} /></button>
+                              <button type="button" onClick={() => setReferenceImageUrl('')} className="p-2 bg-white rounded-lg text-red-500"><X size={14} /></button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isUploading}
+                            className="w-full py-10 border-2 border-dashed border-slate-100 rounded-2xl flex flex-col items-center justify-center gap-2 hover:border-[#EE5A24]/30 hover:bg-slate-50 transition-all text-slate-300 hover:text-[#EE5A24]"
+                          >
+                            {isUploading ? <RefreshCw size={20} className="animate-spin text-[#EE5A24]" /> : <ImageIcon size={20} />}
+                            <span className="text-[9px] font-black uppercase tracking-widest">Upload Character Image</span>
+                          </button>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
-
-                  {selectedCharacter && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl space-y-3 relative overflow-hidden"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Selected Identity</span>
-                        <button onClick={() => setSelectedCharacter(null)} className="text-emerald-300 hover:text-emerald-500"><X size={14} /></button>
-                      </div>
-                      <div>
-                        <p className="text-[8px] font-black text-emerald-600/50 uppercase tracking-widest mb-1">Full Description</p>
-                        <p className="text-[10px] text-emerald-800 leading-relaxed italic line-clamp-3">"{selectedCharacter.description}"</p>
-                      </div>
-                      <div className="pt-2 border-t border-emerald-100/50">
-                        <p className="text-[8px] font-black text-emerald-600/50 uppercase tracking-widest mb-1">Seed Prompt</p>
-                        <p className="text-[9px] font-mono text-emerald-700/70 break-words line-clamp-2">{selectedCharacter.seed_prompt}</p>
-                      </div>
-                    </motion.div>
-                  )}
                 </div>
               )}
 
@@ -238,17 +372,93 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
               </div>
             </div>
 
-            {/* Right Column: Concept Area (2/3) */}
-            <div className="lg:col-span-2 flex flex-col h-full min-h-[450px]">
+            <div className="lg:col-span-2 flex flex-col h-full min-h-[500px]">
+              {/* 5. Genre & Style Section */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4 ml-1">
+                  <div className="flex items-center gap-2">
+                    <div className="h-px w-6 bg-[#EE5A24]"></div>
+                    <label className="block text-[10px] font-black text-[#EE5A24] uppercase tracking-[0.2em]">4. Genre & Topic</label>
+                  </div>
+                  
+                  <button 
+                    type="button"
+                    onClick={handleGenerateIdeas}
+                    disabled={isGeneratingIdeas || !genre.trim()}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-[#11202C] text-white rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-[#1a2f3f] transition-all disabled:opacity-30 shadow-sm"
+                  >
+                    {isGeneratingIdeas ? <RefreshCw size={10} className="animate-spin" /> : <Sparkles size={10} />}
+                    Brainstorm Suggestions
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={genre}
+                      onChange={(e) => setGenre(e.target.value)}
+                      placeholder="e.g. Cinematic Sci-Fi horror, Luxury car ad, 90s retro quiz..."
+                      className="w-full bg-[#FBFBFB] border border-slate-100 rounded-2xl px-6 py-4 text-sm text-[#11202C] focus:outline-none focus:ring-4 focus:ring-[#EE5A24]/5 focus:border-[#EE5A24]/30 transition-all font-medium placeholder:text-slate-300"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {GENRE_TAGS.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => setGenre(tag)}
+                        className={`px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest transition-all ${
+                          genre === tag 
+                            ? 'bg-[#EE5A24] text-white shadow-lg shadow-[#EE5A24]/20' 
+                            : 'bg-slate-50 text-slate-400 hover:bg-slate-100 border border-slate-100'
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Suggestions area */}
+              <div className="mb-8">
+                <div className="flex items-center gap-2 mb-4 ml-1">
+                  <div className="h-px w-4 bg-slate-200"></div>
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Suggested Concepts</span>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  {isGeneratingIdeas ? (
+                    [1, 2, 3].map(i => (
+                      <div key={i} className="h-16 bg-slate-50 animate-pulse rounded-2xl border border-slate-100"></div>
+                    ))
+                  ) : (
+                    activePrompts.map((p, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setConcept(p)}
+                        className="p-4 bg-white border border-slate-100 rounded-2xl text-[11px] font-bold text-slate-500 hover:text-[#EE5A24] hover:border-[#EE5A24]/30 hover:shadow-md transition-all text-left relative overflow-hidden group"
+                      >
+                         <div className="absolute top-0 left-0 w-1 h-full bg-[#EE5A24] opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                         <p className="line-clamp-2 leading-relaxed">{p}</p>
+                      </button>
+                    ))
+                  )}
+                </div>
+              </div>
+
+
               <div className="flex items-center gap-2 mb-4 ml-1">
                 <div className="h-px w-6 bg-[#EE5A24]"></div>
-                <label className="block text-[10px] font-black text-[#EE5A24] uppercase tracking-[0.2em]">4. The Concept Script</label>
+                <label className="block text-[10px] font-black text-[#EE5A24] uppercase tracking-[0.2em]">5. Final Concept Script</label>
               </div>
               <textarea
                 value={concept}
                 onChange={(e) => setConcept(e.target.value)}
-                placeholder={selectedCharacter ? `Describe what ${selectedCharacter.description.split(',')[0]} is doing...` : "e.g. A Cyber Noir heist..."}
-                className="flex-grow w-full bg-[#FBFBFB] border border-slate-100 rounded-[1.5rem] p-6 text-base text-[#11202C] focus:outline-none focus:ring-4 focus:ring-[#EE5A24]/5 focus:border-[#EE5A24]/30 transition-all resize-none placeholder:text-slate-300 font-medium"
+                placeholder={selectedCharacter ? `Describe what ${selectedCharacter.description.split(',')[0]} is doing...` : "Select a suggestion above or write your own..."}
+                className="flex-grow w-full bg-[#FBFBFB] border border-slate-100 rounded-[1.5rem] p-6 text-sm text-[#11202C] focus:outline-none focus:ring-4 focus:ring-[#EE5A24]/5 focus:border-[#EE5A24]/30 transition-all resize-none placeholder:text-slate-300 font-medium min-h-[150px]"
                 required
               />
             </div>

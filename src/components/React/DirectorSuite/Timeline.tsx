@@ -8,7 +8,7 @@ interface TimelineProps {
   characterAnchor: CharacterAnchor;
   currentSummary: string;
   status: 'Draft' | 'Approved';
-  onUpdateFrame: (index: number, updatedFrame: Frame, updatedSummary: string) => void;
+  onUpdateFrame: (index: number, updatedFrame: Frame, updatedSummary: string, shouldCascade?: boolean) => void;
   videoUrl?: string;
 }
 
@@ -37,7 +37,7 @@ export const Timeline: React.FC<TimelineProps> = ({ frames, characterAnchor, cur
               characterAnchor={characterAnchor}
               currentSummary={currentSummary}
               isReadOnly={status === 'Approved'}
-              onUpdate={(updatedFrame, updatedSummary) => onUpdateFrame(index, updatedFrame, updatedSummary)}
+              onUpdate={(updatedFrame, updatedSummary, shouldCascade) => onUpdateFrame(index, updatedFrame, updatedSummary, shouldCascade)}
             />
           </motion.div>
         ))}

@@ -14,6 +14,10 @@ export const POST: APIRoute = async ({ request }) => {
 Refine the character description based on the user's tweak. 
 Also, if the character change significantly alters the story's tone or flow, update the Story Summary accordingly.
 
+CRITICAL CONSTRAINTS:
+- DO NOT mention 'Nano Banana' or 'Veo' in the output.
+- Ensure the character description is highly detailed and visually consistent for image generation.
+
 Current Character: ${characterAnchor.description}
 Current Summary: ${currentSummary}
 User Tweak: ${tweak}

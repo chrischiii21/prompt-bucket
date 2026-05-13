@@ -22,6 +22,7 @@ export const DirectorSuite: React.FC = () => {
   const [currentVersionIndex, setCurrentVersionIndex] = useState<number>(-1);
   const [lastApprovedSnapshot, setLastApprovedSnapshot] = useState<ProjectData | null>(null);
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  const [isCascading, setIsCascading] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -87,11 +88,10 @@ export const DirectorSuite: React.FC = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleGenerate = async (concept: string, duration: number, productionType: string, existingCharacter?: any) => {
+  const handleGenerate = async (concept: string, duration: number, prodType: string, genre: string, referenceImageUrl?: string, existingCharacter?: any) => {
     setIsGenerating(true);
-    setError(null);
     try {
-      const data = await aiScripter.generateVision(concept, duration, productionType, existingCharacter);
+      const data = await aiScripter.generateVision(concept, duration, prodType, genre, referenceImageUrl, existingCharacter);
       if (data && data.frames) {
         // Archive the current working draft before replacing it
         if (projectData && step === 'refining') {
@@ -120,11 +120,44 @@ export const DirectorSuite: React.FC = () => {
     }
   };
 
-  const handleUpdateFrame = (index: number, updatedFrame: Frame, updatedSummary: string) => {
+  const handleUpdateFrame = async (index: number, updatedFrame: Frame, updatedSummary: string, shouldCascade: boolean = false) => {
     if (!projectData) return;
+    
     const newFrames = [...projectData.frames];
     newFrames[index] = updatedFrame;
+    
+    // Immediate UI update for the targeted frame
     setProjectData({ ...projectData, frames: newFrames, summary: updatedSummary });
+
+    if (shouldCascade && index < newFrames.length - 1) {
+      setIsCascading(true);
+      try {
+        let runningSummary = updatedSummary;
+        let lastFramePrompt = updatedFrame.final_prompt;
+
+        for (let i = index + 1; i < newFrames.length; i++) {
+          const result = await aiScripter.refineFrame(
+            newFrames[i],
+            `STRICT CONSISTENCY: The previous scene was just updated. Adjust this scene to maintain perfect narrative and visual continuity with the new context: "${lastFramePrompt}"`,
+            projectData.character_anchor,
+            runningSummary
+          );
+          
+          newFrames[i] = { ...newFrames[i], final_prompt: result.final_prompt };
+          runningSummary = result.summary;
+          lastFramePrompt = result.final_prompt;
+          
+          // Update UI incrementally so the user sees progress
+          setProjectData(prev => prev ? { ...prev, frames: [...newFrames], summary: runningSummary } : null);
+        }
+        showToast('Cascading Consistency Applied');
+      } catch (err: any) {
+        console.error('Cascading refinement failed:', err);
+        showToast('Consistency cascade failed', 'error');
+      } finally {
+        setIsCascading(false);
+      }
+    }
   };
 
   // workingDraft holds the latest live version so we can restore it after viewing history
@@ -433,6 +466,12 @@ export const DirectorSuite: React.FC = () => {
                 >
                   <RefreshCw size={14} /> Refine Further
                 </button>
+              </div>
+            )}
+            {isCascading && (
+              <div className="flex items-center gap-3 px-4 py-2 bg-[#EE5A24]/10 border border-[#EE5A24]/20 rounded-2xl text-[#EE5A24] animate-pulse">
+                <RefreshCw size={14} className="animate-spin" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Synchronizing Frames...</span>
               </div>
             )}
           </div>

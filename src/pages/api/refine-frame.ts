@@ -14,6 +14,10 @@ export const POST: APIRoute = async ({ request }) => {
 Refine the scene prompt based on the user's tweak while ensuring visual consistency with the character.
 Also, if the scene change alters the overall story flow, update the Story Summary.
 
+CRITICAL CONSTRAINTS: 
+- DO NOT mention 'Nano Banana' or 'Veo' in the output.
+- Ensure the prompt is visually grounded and optimized for image/video generation.
+
 Character Anchor: ${characterAnchor.description}
 Current Summary: ${currentSummary}
 Current Scene [${frame.timestamp}]: ${frame.final_prompt}
