@@ -27,7 +27,7 @@ export const POST: APIRoute = async ({ request }) => {
   let characterContext = '';
   let imageAnalysis = '';
 
-  if (referenceImageUrl && productionType === 'character') {
+  if (referenceImageUrl && productionType === 'character' && !existingCharacter) {
     try {
       console.log('Analyzing reference image with Vision model...');
       const visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -37,7 +37,7 @@ export const POST: APIRoute = async ({ request }) => {
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'llama-3.2-11b-vision-preview',
+          model: 'meta-llama/llama-4-scout-17b-16e-instruct',
           messages: [
             {
               role: 'user',
@@ -113,7 +113,7 @@ ${genre ? `PRIMARY GENRE/STYLE: ${genre}` : ''}
 First, write a 2-3 sentence "Story Summary" that describes the overarching narrative flow.
 Then, for each scene, generate a timestamped "Beat Sheet" with a duration, shot type, and a final prompt.
 
-CRITICAL RULE: For every scene's final prompt, you MUST include the anchor description (character or visual style) at the start to ensure visual continuity.
+CRITICAL RULE: For every scene's final prompt, you must ONLY describe the specific scene action, environment changes, and camera movements. DO NOT describe the character's physical appearance or the global art style, as the exact character anchor prompt will be automatically prepended to your output programmatically. Just write what the character is doing and where.
 
 Format your response as a valid JSON object:
 {
@@ -205,6 +205,19 @@ Note: If the production type is 'text', the final_prompt field MUST include the 
       // Maintain image_url if applicable
       if (visionData.character_anchor) {
         visionData.character_anchor.image_url = referenceImageUrl || existingCharacter?.image_url || null;
+      }
+
+      // Programmatically prepend the exact character anchor to guarantee 100% fidelity
+      const anchorPrompt = existingCharacter?.description || imageAnalysis;
+      if (anchorPrompt && visionData.frames && Array.isArray(visionData.frames)) {
+        visionData.frames = visionData.frames.map((frame: any) => {
+          if (frame.final_prompt) {
+             // Remove any accidental LLM repetitions to prevent double prompting
+             const cleanPrompt = frame.final_prompt.replace(anchorPrompt, '').replace(/^,\s*/, '').trim();
+             frame.final_prompt = `${anchorPrompt}, ${cleanPrompt}`;
+          }
+          return frame;
+        });
       }
 
       // Ensure total_duration is set correctly if not provided by AI

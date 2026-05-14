@@ -32,6 +32,7 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
   const [showCharacterPicker, setShowCharacterPicker] = useState(false);
   const [characterOption, setCharacterOption] = useState<'library' | 'upload'>('library');
   const [referenceImageUrl, setReferenceImageUrl] = useState<string>('');
+  const [imagePrompt, setImagePrompt] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -90,6 +91,8 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
     }
 
     setIsUploading(true);
+    setImagePrompt('');
+    setSelectedCharacter(null);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Math.random().toString(36).substring(2)}-${Date.now()}.${fileExt}`;
@@ -106,6 +109,23 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
         .getPublicUrl(filePath);
 
       setReferenceImageUrl(publicUrl);
+
+      // Fetch prompt equivalent
+      try {
+        const response = await fetch('/api/describe-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl: publicUrl })
+        });
+        if (response.ok) {
+          const promptData = await response.json();
+          if (promptData.prompt) {
+            setImagePrompt(promptData.prompt);
+          }
+        }
+      } catch (promptErr) {
+        console.error('Failed to get image prompt:', promptErr);
+      }
     } catch (err: any) {
       console.error('Upload failed:', err);
       alert('Failed to upload image. Please try again.');
@@ -288,12 +308,44 @@ export const ScripterForm: React.FC<ScripterFormProps> = ({ onGenerate, isGenera
                         />
                         
                         {referenceImageUrl ? (
-                          <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-[#EE5A24]/30 shadow-lg shadow-[#EE5A24]/5 group">
-                            <img src={referenceImageUrl} className="w-full h-full object-cover" alt="Reference" />
-                            <div className="absolute inset-0 bg-[#11202C]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                              <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 bg-white rounded-lg text-[#11202C] hover:text-[#EE5A24]"><RefreshCw size={14} /></button>
-                              <button type="button" onClick={() => setReferenceImageUrl('')} className="p-2 bg-white rounded-lg text-red-500"><X size={14} /></button>
+                          <div className="space-y-3">
+                            <div className="relative aspect-video rounded-2xl overflow-hidden border-2 border-[#EE5A24]/30 shadow-lg shadow-[#EE5A24]/5 group">
+                              <img src={referenceImageUrl} className="w-full h-full object-cover" alt="Reference" />
+                              <div className="absolute inset-0 bg-[#11202C]/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 bg-white rounded-lg text-[#11202C] hover:text-[#EE5A24]"><RefreshCw size={14} /></button>
+                                <button type="button" onClick={() => { setReferenceImageUrl(''); setImagePrompt(''); }} className="p-2 bg-white rounded-lg text-red-500"><X size={14} /></button>
+                              </div>
                             </div>
+                            {imagePrompt ? (
+                              <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl relative group">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <Sparkles size={12} className="text-[#EE5A24]" />
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-[#11202C]">AI Extracted Prompt</span>
+                                </div>
+                                <p className="text-[10px] text-slate-500 font-medium leading-relaxed max-h-32 overflow-y-auto custom-scrollbar">
+                                  {imagePrompt}
+                                </p>
+                                <button 
+                                  type="button" 
+                                  onClick={() => navigator.clipboard.writeText(imagePrompt)}
+                                  className="absolute top-3 right-[70px] text-[9px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition-opacity bg-white px-2 py-1 rounded shadow-sm border border-slate-200 hover:bg-slate-50 hover:text-[#11202C]"
+                                >
+                                  Copy
+                                </button>
+                                <button 
+                                  type="button" 
+                                  onClick={() => setSelectedCharacter({ description: imagePrompt, seed_prompt: imagePrompt, image_url: referenceImageUrl })}
+                                  className={`absolute top-3 right-3 text-[9px] font-bold opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded shadow-sm border flex items-center gap-1 ${selectedCharacter?.description === imagePrompt ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-[#EE5A24] border-[#EE5A24]/20 hover:bg-[#EE5A24] hover:text-white'}`}
+                                >
+                                  <Check size={10} /> {selectedCharacter?.description === imagePrompt ? 'Anchored!' : 'Use as Anchor'}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-xl text-slate-400">
+                                <RefreshCw size={12} className="animate-spin" />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Extracting image prompt...</span>
+                              </div>
+                            )}
                           </div>
                         ) : (
                           <button
